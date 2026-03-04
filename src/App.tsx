@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { GraphSelectionForm } from './components/GraphSelectionForm';
 import svgPaths from "./imports/svg-ofxr8hlvdr";
-import imgEficaciaLogo from "figma:asset/5cf9932038127cdc889b9c9014128a9f8058a4d9.png";
 
 function Logo() {
   return (
     <div className="h-[40px] w-[120px]">
-      <img alt="Eficacia" className="h-full w-full object-contain" src={imgEficaciaLogo} />
+      <img alt="Eficacia" className="h-full w-full object-contain" src={"https://eficacia.com.co/wp-content/uploads/2020/05/logo.svg"} />
     </div>
   );
 }
@@ -18,6 +17,7 @@ function Navigation() {
         <div className="flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-8">
+            <h1>hiii</h1>
             <button className="text-[#005fa0]">INICIO</button>
             <button className="text-[#333]">GRÁFICOS</button>
             <button className="text-[#333]">PLANTILLAS</button>
