@@ -1,0 +1,21 @@
+:root {
+  --color-primary: #005fa0;
+  --color-primary-dark: #253a66;
+  --color-accent: #41c0f0;
+  --color-bg: #f5f5f5;
+  --color-card: #ffffff;
+  --color-soft-blue: #f0f9ff;
+  --color-border: rgba(0,0,0,0.1);
+  --color-text-primary: #253a66;
+  --color-text-secondary: #666666;
+  --color-text-muted: #979797;
+  --color-success: #10b981;
+  --color-danger: #d4183d;
+  --headerGradient: "linear-gradient(to right, #005fa0, #253a66)";
+  --kpiBackground: "linear-gradient(to bottom right, #f0f9ff, #ffffff)";
+
+  --radius-card: 12px;
+  --radius-bar: 8px;
+
+  --chart-grid: #f0f0f0;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import * as RechartsPrimitive from "recharts@2.15.2";
+import * as RechartsPrimitive from "recharts";
 
 import { cn } from "./utils";
 
@@ -173,9 +173,15 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        "border-border/50 bg-background grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
+        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl",
         className,
       )}
+      style={{
+        backgroundColor: 'var(--color-card)',
+        borderColor: 'var(--color-border)',
+        color: 'var(--color-text-primary)',
+        padding: 8,
+      }}
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
@@ -228,12 +234,15 @@ function ChartTooltipContent({
                   >
                     <div className="grid gap-1.5">
                       {nestLabel ? tooltipLabel : null}
-                      <span className="text-muted-foreground">
+                      <span style={{ color: 'var(--color-text-secondary)' }}>
                         {itemConfig?.label || item.name}
                       </span>
                     </div>
                     {item.value && (
-                      <span className="text-foreground font-mono font-medium tabular-nums">
+                      <span 
+                        className="font-mono font-medium tabular-nums"
+                        style={{ color: 'var(--color-text-primary)' }}
+                      >
                         {item.value.toLocaleString()}
                       </span>
                     )}
@@ -278,21 +287,25 @@ function ChartLegendContent({
       {payload.map((item) => {
         const key = `${nameKey || item.dataKey || "value"}`;
         const itemConfig = getPayloadConfigFromPayload(config, item, key);
+        console.log("itemConfig", itemConfig, key, item, itemConfig?.color);
 
         return (
           <div
             key={item.value}
             className={cn(
-              "[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3",
+              "[&>svg]:text-muted-foreground flex items-center gap-5 [&>svg]:h-3 [&>svg]:w-3",
             )}
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
+                className="shrink-0 rounded-[2px]"
                 style={{
-                  backgroundColor: item.color,
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: itemConfig?.color || item.color,
+                  flexShrink: 0,
                 }}
               />
             )}
