@@ -1,0 +1,52 @@
+import { useState } from 'react';
+import { GraphSelectionForm } from './components/GraphSelectionForm';
+import svgPaths from "./imports/svg-ofxr8hlvdr";
+import imgEficaciaLogo from "figma:asset/5cf9932038127cdc889b9c9014128a9f8058a4d9.png";
+
+function Logo() {
+  return (
+    <div className="h-[40px] w-[120px]">
+      <img alt="Eficacia" className="h-full w-full object-contain" src={imgEficaciaLogo} />
+    </div>
+  );
+}
+
+function Navigation() {
+  return (
+    <nav className="bg-white border-b border-[rgba(0,0,0,0.1)]">
+      <div className="max-w-[1400px] mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <Logo />
+          <div className="flex items-center gap-8">
+            <button className="text-[#005fa0]">INICIO</button>
+            <button className="text-[#333]">GRÁFICOS</button>
+            <button className="text-[#333]">PLANTILLAS</button>
+            <button className="text-[#333]">AYUDA</button>
+          </div>
+          <button className="bg-[#41c0f0] text-white px-8 py-3 rounded-[30px]">
+            INGRESAR
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-[#f5f5f5]">
+      <Navigation />
+      <main className="max-w-[1200px] mx-auto px-6 py-12">
+        <div className="mb-8">
+          <h1 className="text-[32px] text-[#253a66] mb-2">
+            Crea tu dashboard de indicadores
+          </h1>
+          <p className="text-[#979797]">
+            Selecciona variables, indicadores y personaliza las visualizaciones
+          </p>
+        </div>
+        <GraphSelectionForm />
+      </main>
+    </div>
+  );
+}
