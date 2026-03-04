@@ -42,13 +42,15 @@ export interface BaseComposedChartProps {
 }
 
 const DEFAULT_COLORS = [
+  'var(--color-blue-cyan)', // cyan blue
+
   'var(--color-blue-dark)', // dark blue
+
   'var(--color-blue-navy)', // navy blue
   'var(--color-blue-primary)', // primary blue
   'var(--color-blue-medium)', // medium blue
   'var(--color-blue-bright)', // bright blue
   'var(--color-blue-light)', // light blue
-  'var(--color-blue-cyan)', // cyan blue
   'var(--color-accent)', // accent cyan
 ];
 
