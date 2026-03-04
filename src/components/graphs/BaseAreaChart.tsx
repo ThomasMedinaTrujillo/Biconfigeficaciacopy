@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,22 +19,20 @@ import {
 } from '../ui/chart';
 import './dashboard-theme.css';
 
-export interface BaseLineChartProps {
+export interface BaseAreaChartProps {
   // Required props
   data: Record<string, any>[];
   xKey: string;
   yKeys: string[];
 
   // Optional props
+  stacked?: boolean;
   colors?: string[];
-  strokeWidth?: number;
-  showDots?: boolean;
   showGrid?: boolean;
   showLegend?: boolean;
   showTooltip?: boolean;
-  curveType?: 'monotone' | 'linear' | 'step';
-  secondaryAxisKey?: string;
-  secondaryAxisOrientation?: 'left' | 'right';
+  curveType?: 'monotone' | 'linear';
+  opacity?: number;
   xAxisLabel?: string;
   yAxisLabel?: string;
   className?: string;
@@ -53,43 +51,41 @@ const DEFAULT_COLORS = [
 ];
 
 /**
- * BaseLineChart - A configurable line chart for time-series trends, comparisons, and dual-axis visualizations
+ * BaseAreaChart - A configurable area chart supporting stacked areas, cumulative areas, and confidence bands
  *
  * Supports:
- * - Multiple line series with customizable colors and stroke widths
- * - Different curve types (monotone, linear, step)
- * - Optional dots at data points
- * - Dual-axis visualization for comparing different scales
+ * - Stacked and non-stacked area visualizations
+ * - Multiple area series with customizable colors and opacity
+ * - Different curve types (monotone, linear)
  * - Configurable grid, legend, and tooltip display
+ * - Cumulative and confidence band visualizations
  *
  * @component
  * @example
  * const data = [
- *   { month: 'Jan', revenue: 4000, users: 240 },
- *   { month: 'Feb', revenue: 3000, users: 221 },
+ *   { month: 'Jan', revenue: 4000, profit: 2400 },
+ *   { month: 'Feb', revenue: 3000, profit: 1398 },
  * ];
  *
- * <BaseLineChart
+ * <BaseAreaChart
  *   data={data}
  *   xKey="month"
- *   yKeys={['revenue', 'users']}
- *   curveType="monotone"
- *   showDots={true}
+ *   yKeys={['revenue', 'profit']}
+ *   stacked={true}
+ *   opacity={0.7}
  * />
  */
-export const BaseLineChart: React.FC<BaseLineChartProps> = ({
+export const BaseAreaChart: React.FC<BaseAreaChartProps> = ({
   data,
   xKey,
   yKeys,
+  stacked = false,
   colors = DEFAULT_COLORS,
-  strokeWidth = 2,
-  showDots = true,
   showGrid = true,
   showLegend = true,
   showTooltip = true,
   curveType = 'monotone',
-  secondaryAxisKey,
-  secondaryAxisOrientation = 'right',
+  opacity = 0.8,
   xAxisLabel,
   yAxisLabel,
   className = '',
@@ -112,18 +108,15 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
     };
   });
 
-  // Determine which keys use the secondary axis
-  const hasSecondaryAxis = !!secondaryAxisKey && yKeys.includes(secondaryAxisKey);
-
   return (
     <ChartContainer config={chartConfig} className={`w-full h-full ${className}`}>
       <div style={{ width: '100%', height: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <AreaChart
             data={data}
             margin={{
               top: 20,
-              right: hasSecondaryAxis ? 60 : 30,
+              right: 30,
               left: xAxisLabel ? 60 : 30,
               bottom: yAxisLabel ? 60 : 20,
             }}
@@ -151,7 +144,6 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
             />
 
             <YAxis
-              yAxisId="left"
               stroke="var(--color-text-secondary)"
               tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
               label={
@@ -168,42 +160,29 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
               }
             />
 
-            {hasSecondaryAxis && (
-              <YAxis
-                yAxisId="right"
-                orientation={secondaryAxisOrientation}
-                stroke="var(--color-text-secondary)"
-                tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
-              />
-            )}
-
             {showTooltip && (
               <Tooltip content={<ChartTooltipContent />} />
             )}
 
             {showLegend && yKeys.length > 1 && <Legend content={ChartLegendContent as any} />}
 
-            {yKeys.map((key, index) => {
-              const useSecondaryAxis = hasSecondaryAxis && key === secondaryAxisKey;
-              
-              return (
-                <Line
-                  key={key}
-                  dataKey={key}
-                  type={curveType}
-                  stroke={colors[index % colors.length]}
-                  strokeWidth={strokeWidth}
-                  dot={showDots}
-                  activeDot={{ r: 6 }}
-                  yAxisId={useSecondaryAxis ? 'right' : 'left'}
-                />
-              );
-            })}
-          </LineChart>
+            {yKeys.map((key, index) => (
+              <Area
+                key={key}
+                type={curveType}
+                dataKey={key}
+                stackId={stacked ? 'stack' : undefined}
+                stroke={colors[index % colors.length]}
+                fill={colors[index % colors.length]}
+                fillOpacity={opacity}
+                activeDot={{ r: 6 }}
+              />
+            ))}
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </ChartContainer>
   );
 };
 
-export default BaseLineChart;
+export default BaseAreaChart;

@@ -1,136 +1,309 @@
+import React from 'react';
 import BaseBarChart from "./components/graphs/BaseBarChart";
 import BaseLineChart from "./components/graphs/BaseLineChart";
+import BaseAreaChart from "./components/graphs/BaseAreaChart";
+import BasePieChart from "./components/graphs/BasePieChart";
+import BaseScatterChart from "./components/graphs/BaseScatterChart";
+import BaseComposedChart from "./components/graphs/BaseComposedChart";
+
+interface CardProps {
+  children: React.ReactNode;
+  title: string;
+  description?: string;
+  formula?: string;
+}
+
+interface MetricCardProps {
+  label: string;
+  value: string | number;
+  unit?: string;
+}
+
+const Card: React.FC<CardProps> = ({ children, title, description, formula }) => (
+  <div
+    style={{
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '24px',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      border: '1px solid #e5e7eb',
+    }}
+  >
+    <div style={{ marginBottom: '16px' }}>
+      <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', color: '#253a66' }}>
+        {title}
+      </h3>
+      {description && (
+        <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#666' }}>
+          {description}
+        </p>
+      )}
+      {formula && (
+        <p style={{ margin: '0', fontSize: '12px', color: '#005fa0', fontFamily: 'monospace' }}>
+          {formula}
+        </p>
+      )}
+    </div>
+    <div style={{ height: '380px' }}>
+      {children}
+    </div>
+  </div>
+);
+
+const MetricCard: React.FC<MetricCardProps> = ({ label, value, unit }) => (
+  <div
+    style={{
+      flex: '1',
+      padding: '16px',
+      backgroundColor: '#f0f9ff',
+      borderRadius: '8px',
+      textAlign: 'center',
+      minWidth: '150px',
+    }}
+  >
+    <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      {label}
+    </div>
+    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#005fa0' }}>
+      {value}{unit && <span style={{ fontSize: '14px' }}>{unit}</span>}
+    </div>
+  </div>
+);
 
 const GraphShowcase = () => {
-    const barData = [
-        { month: 'Jan', sales: 400, profit: 240 },
-        { month: 'Feb', sales: 300, profit: 221 },
-        { month: 'Mar', sales: 500, profit: 290 },
-    ];
+  // Core business data - reusable across multiple charts
+  const monthlyData = [
+    { month: 'Enero', salesQ1: 68, salesQ2: 72, salesQ3: 65, target: 75, completed: 68 },
+    { month: 'Feb', salesQ1: 71, salesQ2: 68, salesQ3: 70, target: 75, completed: 71 },
+    { month: 'Mar', salesQ1: 65, salesQ2: 75, salesQ3: 72, target: 75, completed: 65 },
+    { month: 'Abr', salesQ1: 50, salesQ2: 56, salesQ3: 54, target: 75, completed: 50 },
+    { month: 'May', salesQ1: 68, salesQ2: 65, salesQ3: 69, target: 75, completed: 68 },
+    { month: 'Jun', salesQ1: 72, salesQ2: 70, salesQ3: 71, target: 75, completed: 72 },
+  ];
 
-    // Time-series data (basic line chart)
-    const timeSeriesData = [
-        { date: '2024-01-01', visits: 400, pageViews: 2400 },
-        { date: '2024-01-02', visits: 480, pageViews: 2210 },
-        { date: '2024-01-03', visits: 520, pageViews: 2290 },
-        { date: '2024-01-04', visits: 380, pageViews: 2000 },
-        { date: '2024-01-05', visits: 490, pageViews: 2181 },
-        { date: '2024-01-06', visits: 530, pageViews: 2500 },
-        { date: '2024-01-07', visits: 610, pageViews: 2100 },
-    ];
+  const departmentData = [
+    { name: 'Sales', value: 35, percentage: 35 },
+    { name: 'Marketing', value: 25, percentage: 25 },
+    { name: 'Development', value: 28, percentage: 28 },
+    { name: 'Operations', value: 12, percentage: 12 },
+  ];
 
-    // Comparative trends data
-    const trendsData = [
-        { week: 'Week 1', revenue: 4000, expenses: 2400 },
-        { week: 'Week 2', revenue: 5200, expenses: 2210 },
-        { week: 'Week 3', revenue: 4800, expenses: 2290 },
-        { week: 'Week 4', revenue: 6100, expenses: 2000 },
-        { week: 'Week 5', revenue: 7200, expenses: 2181 },
-        { week: 'Week 6', revenue: 6800, expenses: 2500 },
-    ];
+  const performanceData = [
+    { quarter: 'Q1', revenue: 45000, profit: 12000, expenses: 33000 },
+    { quarter: 'Q2', revenue: 52000, profit: 15600, expenses: 36400 },
+    { quarter: 'Q3', revenue: 48000, profit: 14400, expenses: 33600 },
+    { quarter: 'Q4', revenue: 62000, profit: 18600, expenses: 43400 },
+  ];
 
-    // Dual-axis data (different scales)
-    const dualAxisData = [
-        { month: 'Jan', temperature: 65, humidity: 72 },
-        { month: 'Feb', temperature: 68, humidity: 65 },
-        { month: 'Mar', temperature: 72, humidity: 58 },
-        { month: 'Apr', temperature: 78, humidity: 52 },
-        { month: 'May', temperature: 85, humidity: 43 },
-        { month: 'Jun', temperature: 92, humidity: 38 },
-    ];
+  const correlationData = [
+    { teamSize: 3, productivity: 65, efficiency: 72 },
+    { teamSize: 5, productivity: 72, efficiency: 78 },
+    { teamSize: 8, productivity: 80, efficiency: 85 },
+    { teamSize: 10, productivity: 88, efficiency: 92 },
+    { teamSize: 12, productivity: 82, efficiency: 80 },
+    { teamSize: 15, productivity: 75, efficiency: 72 },
+  ];
 
-    // Multi-line comparison data
-    const multiLineData = [
-        { period: 'Q1', productA: 2400, productB: 1800, productC: 1200 },
-        { period: 'Q2', productA: 2210, productB: 2000, productC: 1800 },
-        { period: 'Q3', productA: 2290, productB: 2100, productC: 2400 },
-        { period: 'Q4', productA: 2000, productB: 2300, productC: 2100 },
-    ];
-
-    return (
-        <div style={{ padding: '2rem' }}>
-            <h1>Graph Showcase</h1>
-            <p>This is where we will showcase our graphs.</p>
-
-            <hr style={{ margin: '2rem 0' }} />
-
-            <h2>Bar Charts</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
-                <div>
-                    <h3>Vertical Bar Chart</h3>
-                    <BaseBarChart
-                        data={barData}
-                        xKey="month"
-                        yKeys={['sales', 'profit']}
-                    />
-                </div>
-
-                <div>
-                    <h3>Horizontal Stacked Bar Chart</h3>
-                    <BaseBarChart
-                        data={barData}
-                        xKey="month"
-                        yKeys={['sales', 'profit']}
-                        layout="horizontal"
-                        stacked={true}
-                    />
-                </div>
-            </div>
-
-            <hr style={{ margin: '2rem 0' }} />
-
-            <h2>Line Charts</h2>
-
-            <div style={{ marginBottom: '3rem' }}>
-                <h3>Basic Time Series - Visits vs Page Views</h3>
-                <BaseLineChart
-                    data={timeSeriesData}
-                    xKey="date"
-                    yKeys={['visits', 'pageViews']}
-                    curveType="monotone"
-                    showDots={true}
-                    strokeWidth={2}
-                />
-            </div>
-
-            <div style={{ marginBottom: '3rem' }}>
-                <h3>Comparative Trends - Revenue vs Expenses</h3>
-                <BaseLineChart
-                    data={trendsData}
-                    xKey="week"
-                    yKeys={['revenue', 'expenses']}
-                    curveType="linear"
-                    showDots={false}
-                    strokeWidth={3}
-                />
-            </div>
-
-            <div style={{ marginBottom: '3rem' }}>
-                <h3>Dual-Axis Visualization - Temperature vs Humidity</h3>
-                <BaseLineChart
-                    data={dualAxisData}
-                    xKey="month"
-                    yKeys={['temperature', 'humidity']}
-                    secondaryAxisKey="humidity"
-                    secondaryAxisOrientation="right"
-                    curveType="monotone"
-                    showDots={true}
-                />
-            </div>
-
-            <div style={{ marginBottom: '3rem' }}>
-                <h3>Multi-Line Comparison - Product Sales</h3>
-                <BaseLineChart
-                    data={multiLineData}
-                    xKey="period"
-                    yKeys={['productA', 'productB', 'productC']}
-                    curveType="step"
-                    showDots={true}
-                    strokeWidth={2}
-                />
-            </div>
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', padding: '40px 20px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '48px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', color: '#253a66', margin: '0 0 12px 0' }}>
+            Dashboard Charts Showcase
+          </h1>
+          <p style={{ fontSize: '14px', color: '#666', margin: '0' }}>
+            A comprehensive collection of reusable chart components for data visualization
+          </p>
         </div>
-    );
-}
+
+        {/* Performance Metrics Section */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#253a66', marginBottom: '24px', paddingBottom: '12px', borderBottom: '2px solid #005fa0' }}>
+            Performance Metrics
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+            <Card
+              title="% estrategia implementada"
+              description="Strategic implementation progress across the organization"
+              formula="(COUNT(estrategias_implementadas) / COUNT(total_estrategias)) * 100"
+            >
+              <BaseLineChart
+                data={monthlyData}
+                xKey="month"
+                yKeys={['completed', 'target']}
+                curveType="monotone"
+                showDots={true}
+                showLegend={true}
+              />
+            </Card>
+          </div>
+
+          {/* Metrics Row */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+              marginTop: '20px',
+            }}
+          >
+            <MetricCard label="Histórico" value="6" unit=" meses" />
+            <MetricCard label="Frecuencia" value="Mensual" unit="" />
+            <MetricCard label="Accionables" value="4" unit="" />
+          </div>
+        </div>
+
+        {/* Area & Composed Charts */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#253a66', marginBottom: '24px', paddingBottom: '12px', borderBottom: '2px solid #005fa0' }}>
+            Trend Analysis
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+            <Card
+              title="Quarterly Revenue Distribution"
+              description="Stacked area view of revenue streams"
+            >
+              <BaseAreaChart
+                data={performanceData}
+                xKey="quarter"
+                yKeys={['profit', 'expenses']}
+                stacked={true}
+                opacity={0.7}
+                curveType="monotone"
+              />
+            </Card>
+
+            <Card
+              title="Target vs Actual Performance"
+              description="Revenue achievement across quarters"
+            >
+              <BaseComposedChart
+                data={performanceData}
+                xKey="quarter"
+                barKeys={['revenue']}
+                lineKeys={['profit']}
+                showLegend={true}
+              />
+            </Card>
+          </div>
+        </div>
+
+        {/* Bar Charts */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#253a66', marginBottom: '24px', paddingBottom: '12px', borderBottom: '2px solid #005fa0' }}>
+            Quarterly Breakdown
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+            <Card
+              title="Monthly Sales by Quarter"
+              description="Grouped comparison of sales metrics"
+            >
+              <BaseBarChart
+                data={monthlyData}
+                xKey="month"
+                yKeys={['salesQ1', 'salesQ2', 'salesQ3']}
+                stacked={false}
+                showLegend={true}
+              />
+            </Card>
+
+            <Card
+              title="Compliance Rate"
+              description="Monthly implementation progress"
+            >
+              <BaseBarChart
+                data={monthlyData}
+                xKey="month"
+                yKeys={['completed']}
+                showLegend={false}
+              />
+            </Card>
+          </div>
+        </div>
+
+        {/* Pie & Composition */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#253a66', marginBottom: '24px', paddingBottom: '12px', borderBottom: '2px solid #005fa0' }}>
+            Distribution & Allocation
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+            <Card
+              title="Department Resource Allocation"
+              description="Budget distribution across teams"
+            >
+              <BasePieChart
+                data={departmentData}
+                dataKey="value"
+                nameKey="name"
+                showLegend={true}
+                innerRadius={60}
+                outerRadius={100}
+              />
+            </Card>
+
+            <Card
+              title="Implementation by Department"
+              description="Percentage breakdown of completed strategies"
+            >
+              <BasePieChart
+                data={departmentData}
+                dataKey="percentage"
+                nameKey="name"
+                showLegend={true}
+                label={true}
+              />
+            </Card>
+          </div>
+        </div>
+
+        {/* Correlation Analysis */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#253a66', marginBottom: '24px', paddingBottom: '12px', borderBottom: '2px solid #005fa0' }}>
+            Correlation Insights
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+            <Card
+              title="Team Size vs Productivity"
+              description="Correlation between team composition and performance metrics"
+            >
+              <BaseScatterChart
+                data={correlationData}
+                xKey="teamSize"
+                yKey="productivity"
+                zKey="efficiency"
+                shape="circle"
+                showLegend={true}
+                showTooltip={true}
+              />
+            </Card>
+          </div>
+        </div>
+
+        {/* Advanced Visualizations */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#253a66', marginBottom: '24px', paddingBottom: '12px', borderBottom: '2px solid #005fa0' }}>
+            Advanced Visualizations
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+            <Card
+              title="Revenue vs Profit Analysis"
+              description="Pareto-style analysis of quarterly performance"
+            >
+              <BaseComposedChart
+                data={performanceData}
+                xKey="quarter"
+                barKeys={['revenue']}
+                lineKeys={['profit']}
+                showLegend={true}
+                showTooltip={true}
+              />
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default GraphShowcase;

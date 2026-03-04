@@ -1,7 +1,9 @@
 import React from 'react';
 import {
-  LineChart,
+  ComposedChart,
+  Bar,
   Line,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,20 +21,19 @@ import {
 } from '../ui/chart';
 import './dashboard-theme.css';
 
-export interface BaseLineChartProps {
+export interface BaseComposedChartProps {
   // Required props
   data: Record<string, any>[];
   xKey: string;
-  yKeys: string[];
+  barKeys: string[];
+  lineKeys: string[];
 
   // Optional props
+  stacked?: boolean;
   colors?: string[];
-  strokeWidth?: number;
-  showDots?: boolean;
   showGrid?: boolean;
   showLegend?: boolean;
   showTooltip?: boolean;
-  curveType?: 'monotone' | 'linear' | 'step';
   secondaryAxisKey?: string;
   secondaryAxisOrientation?: 'left' | 'right';
   xAxisLabel?: string;
@@ -42,52 +43,51 @@ export interface BaseLineChartProps {
 
 const DEFAULT_COLORS = [
   'var(--color-blue-dark)', // dark blue
-  'var(--color-blue-cyan)', // cyan blue
-
   'var(--color-blue-navy)', // navy blue
   'var(--color-blue-primary)', // primary blue
   'var(--color-blue-medium)', // medium blue
   'var(--color-blue-bright)', // bright blue
   'var(--color-blue-light)', // light blue
+  'var(--color-blue-cyan)', // cyan blue
   'var(--color-accent)', // accent cyan
 ];
 
 /**
- * BaseLineChart - A configurable line chart for time-series trends, comparisons, and dual-axis visualizations
+ * BaseComposedChart - A flexible composed chart combining bars, lines, and areas
  *
  * Supports:
- * - Multiple line series with customizable colors and stroke widths
- * - Different curve types (monotone, linear, step)
- * - Optional dots at data points
+ * - Multiple bar series with customizable colors
+ * - Multiple line series overlaid on bars
+ * - Stacked bar visualizations
  * - Dual-axis visualization for comparing different scales
+ * - Ideal for Pareto analysis and target vs actual comparisons
  * - Configurable grid, legend, and tooltip display
  *
  * @component
  * @example
  * const data = [
- *   { month: 'Jan', revenue: 4000, users: 240 },
- *   { month: 'Feb', revenue: 3000, users: 221 },
+ *   { month: 'Jan', sales: 400, profit: 240, target: 300 },
+ *   { month: 'Feb', sales: 300, profit: 221, target: 280 },
  * ];
  *
- * <BaseLineChart
+ * <BaseComposedChart
  *   data={data}
  *   xKey="month"
- *   yKeys={['revenue', 'users']}
- *   curveType="monotone"
- *   showDots={true}
+ *   barKeys={['sales', 'profit']}
+ *   lineKeys={['target']}
+ *   stacked={true}
  * />
  */
-export const BaseLineChart: React.FC<BaseLineChartProps> = ({
+export const BaseComposedChart: React.FC<BaseComposedChartProps> = ({
   data,
   xKey,
-  yKeys,
+  barKeys,
+  lineKeys,
+  stacked = false,
   colors = DEFAULT_COLORS,
-  strokeWidth = 2,
-  showDots = true,
   showGrid = true,
   showLegend = true,
   showTooltip = true,
-  curveType = 'monotone',
   secondaryAxisKey,
   secondaryAxisOrientation = 'right',
   xAxisLabel,
@@ -99,13 +99,18 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
     return <div className={className}>No data available</div>;
   }
 
-  if (!yKeys || yKeys.length === 0) {
-    return <div className={className}>No yKeys provided</div>;
+  if (!barKeys || barKeys.length === 0) {
+    return <div className={className}>barKeys are required</div>;
+  }
+
+  if (!lineKeys || lineKeys.length === 0) {
+    return <div className={className}>lineKeys are required</div>;
   }
 
   // Create chart configuration for shadcn/ui integration
   const chartConfig: ChartConfig = {};
-  yKeys.forEach((key, index) => {
+  const allKeys = [...barKeys, ...lineKeys];
+  allKeys.forEach((key, index) => {
     chartConfig[key] = {
       label: key.charAt(0).toUpperCase() + key.slice(1),
       color: colors[index % colors.length],
@@ -113,13 +118,13 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
   });
 
   // Determine which keys use the secondary axis
-  const hasSecondaryAxis = !!secondaryAxisKey && yKeys.includes(secondaryAxisKey);
+  const hasSecondaryAxis = !!secondaryAxisKey && allKeys.includes(secondaryAxisKey);
 
   return (
     <ChartContainer config={chartConfig} className={`w-full h-full ${className}`}>
       <div style={{ width: '100%', height: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <ComposedChart
             data={data}
             margin={{
               top: 20,
@@ -129,8 +134,8 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
             }}
           >
             {showGrid && (
-              <CartesianGrid 
-                strokeDasharray="3 3" 
+              <CartesianGrid
+                strokeDasharray="3 3"
                 stroke="var(--chart-grid)"
                 opacity={0.5}
               />
@@ -140,14 +145,18 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
               dataKey={xKey}
               stroke="var(--color-text-secondary)"
               tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
-              label={xAxisLabel ? { 
-                value: xAxisLabel, 
-                position: 'insideBottomRight', 
-                offset: -10,
-                fill: 'var(--color-text-primary)',
-                fontSize: 13,
-                fontWeight: 500
-              } : undefined}
+              label={
+                xAxisLabel
+                  ? {
+                      value: xAxisLabel,
+                      position: 'insideBottomRight',
+                      offset: -10,
+                      fill: 'var(--color-text-primary)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                    }
+                  : undefined
+              }
             />
 
             <YAxis
@@ -156,13 +165,13 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
               tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
               label={
                 yAxisLabel
-                  ? { 
-                      value: yAxisLabel, 
-                      angle: -90, 
+                  ? {
+                      value: yAxisLabel,
+                      angle: -90,
                       position: 'insideLeft',
                       fill: 'var(--color-text-primary)',
                       fontSize: 13,
-                      fontWeight: 500
+                      fontWeight: 500,
                     }
                   : undefined
               }
@@ -177,33 +186,47 @@ export const BaseLineChart: React.FC<BaseLineChartProps> = ({
               />
             )}
 
-            {showTooltip && (
-              <Tooltip content={<ChartTooltipContent />} />
+            {showTooltip && <Tooltip content={<ChartTooltipContent />} />}
+
+            {showLegend && allKeys.length > 1 && (
+              <Legend content={ChartLegendContent as any} />
             )}
 
-            {showLegend && yKeys.length > 1 && <Legend content={ChartLegendContent as any} />}
-
-            {yKeys.map((key, index) => {
+            {/* Render bars */}
+            {barKeys.map((key, index) => {
               const useSecondaryAxis = hasSecondaryAxis && key === secondaryAxisKey;
-              
               return (
-                <Line
+                <Bar
                   key={key}
                   dataKey={key}
-                  type={curveType}
-                  stroke={colors[index % colors.length]}
-                  strokeWidth={strokeWidth}
-                  dot={showDots}
-                  activeDot={{ r: 6 }}
+                  stackId={stacked ? 'bars' : undefined}
+                  fill={colors[index % colors.length]}
                   yAxisId={useSecondaryAxis ? 'right' : 'left'}
                 />
               );
             })}
-          </LineChart>
+
+            {/* Render lines */}
+            {lineKeys.map((key, index) => {
+              const useSecondaryAxis = hasSecondaryAxis && key === secondaryAxisKey;
+              const colorIndex = (barKeys.length + index) % colors.length;
+              return (
+                <Line
+                  key={key}
+                  dataKey={key}
+                  stroke={colors[colorIndex]}
+                  strokeWidth={2}
+                  dot={false}
+                  yAxisId={useSecondaryAxis ? 'right' : 'left'}
+                  activeDot={{ r: 6 }}
+                />
+              );
+            })}
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </ChartContainer>
   );
 };
 
-export default BaseLineChart;
+export default BaseComposedChart;

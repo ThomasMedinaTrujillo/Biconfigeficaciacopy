@@ -14,6 +14,15 @@
   --headerGradient: "linear-gradient(to right, #005fa0, #253a66)";
   --kpiBackground: "linear-gradient(to bottom right, #f0f9ff, #ffffff)";
 
+  /* Blue shades for chart variety */
+  --color-blue-dark: #003d82;
+  --color-blue-primary: #005fa0;
+  --color-blue-medium: #0284c7;
+  --color-blue-bright: #0891b2;
+  --color-blue-light: #06b6d4;
+  --color-blue-cyan: #41c0f0;
+  --color-blue-navy: #253a66;
+
   --radius-card: 12px;
   --radius-bar: 8px;
 
