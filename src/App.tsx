@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { GraphSelectionForm } from './components/GraphSelectionForm';
+import { Dashboard, FormData } from './components/Dashboard';
 import svgPaths from "./imports/svg-ofxr8hlvdr";
 
 function Logo() {
@@ -17,7 +18,6 @@ function Navigation() {
         <div className="flex items-center justify-between">
           <Logo />
           <div className="flex items-center gap-8">
-            <h1>hiii</h1>
             <button className="text-[#005fa0]">INICIO</button>
             <button className="text-[#333]">GRÁFICOS</button>
             <button className="text-[#333]">PLANTILLAS</button>
@@ -33,20 +33,40 @@ function Navigation() {
 }
 
 export default function App() {
+  const [currentView, setCurrentView] = useState<'form' | 'dashboard'>('form');
+  const [dashboardData, setDashboardData] = useState<FormData | null>(null);
+
+  const handleFormSubmit = (formData: FormData) => {
+    setDashboardData(formData);
+    setCurrentView('dashboard');
+  };
+
+  const handleBackToForm = () => {
+    setCurrentView('form');
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
-      <Navigation />
-      <main className="max-w-[1200px] mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-[32px] text-[#253a66] mb-2">
-            Crea tu dashboard de indicadores
-          </h1>
-          <p className="text-[#979797]">
-            Selecciona variables, indicadores y personaliza las visualizaciones
-          </p>
-        </div>
-        <GraphSelectionForm />
-      </main>
+      {currentView === 'form' && (
+        <>
+          <Navigation />
+          <main className="max-w-[1200px] mx-auto px-6 py-12">
+            <div className="mb-8">
+              <h1 className="text-[32px] text-[#253a66] mb-2">
+                Crea tu dashboard de indicadores
+              </h1>
+              <p className="text-[#979797]">
+                Selecciona variables, indicadores y personaliza las visualizaciones
+              </p>
+            </div>
+            <GraphSelectionForm onSubmit={handleFormSubmit} />
+          </main>
+        </>
+      )}
+      
+      {currentView === 'dashboard' && dashboardData && (
+        <Dashboard formData={dashboardData} onBack={handleBackToForm} />
+      )}
     </div>
   );
 }

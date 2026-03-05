@@ -11,11 +11,28 @@ interface IndicatorDescriptor {
   actionables: string[];
 }
 
+type ChartComponent = 
+  | 'BaseBarChart'
+  | 'BaseLineChart'
+  | 'BasePieChart'
+  | 'BaseAreaChart'
+  | 'BaseTreemap'
+  | 'BaseScatterChart'
+  | 'BaseComposedChart'
+  | 'BaseFunnelChart'
+  | 'GaugeChart'
+  | 'KpiCard'
+  | 'WaterfallChart'
+  | 'BoxPlotChart'
+  | 'HeatmapChart'
+  | 'HeatmapGridChart';
+
 interface VisualizationOption {
   id: VisualizationType;
   name: string;
   description: string;
   example: string;
+  chartComponent: ChartComponent;
 }
 
 interface IndicatorConfig {
@@ -99,9 +116,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Comparativa de barras', description: 'Muestra barras lado a lado para comparar', example: 'Barras agrupadas con marca propia vs competencia' },
-          { id: 'option2', name: 'Línea de tendencia', description: 'Evolución temporal de la diferencia', example: 'Gráfico de líneas mostrando gap en el tiempo' },
-          { id: 'option3', name: 'Indicador numérico', description: 'Número destacado con variación', example: 'KPI card con diferencia y porcentaje de cambio' },
+          { id: 'option1', name: 'Comparativa de barras', description: 'Muestra barras lado a lado para comparar', example: 'Barras agrupadas con marca propia vs competencia', chartComponent: 'BaseBarChart' },
+          { id: 'option2', name: 'Línea de tendencia', description: 'Evolución temporal de la diferencia', example: 'Gráfico de líneas mostrando gap en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Indicador numérico', description: 'Número destacado con variación', example: 'KPI card con diferencia y porcentaje de cambio', chartComponent: 'KpiCard' },
         ]
       },
       { 
@@ -120,9 +137,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gráfico circular', description: 'Distribución en porcentajes', example: 'Pie chart con cada tipo de exhibición' },
-          { id: 'option2', name: 'Barras apiladas 100%', description: 'Composición comparativa', example: 'Barras horizontales mostrando proporción' },
-          { id: 'option3', name: 'Treemap', description: 'Bloques proporcionales', example: 'Rectángulos de tamaño variable por tipo' },
+          { id: 'option1', name: 'Gráfico circular', description: 'Distribución en porcentajes', example: 'Pie chart con cada tipo de exhibición', chartComponent: 'BasePieChart' },
+          { id: 'option2', name: 'Barras apiladas 100%', description: 'Composición comparativa', example: 'Barras horizontales mostrando proporción', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Treemap', description: 'Bloques proporcionales', example: 'Rectángulos de tamaño variable por tipo', chartComponent: 'BaseTreemap' },
         ]
       },
       { 
@@ -141,9 +158,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Comparativa horizontal', description: 'Barras horizontales por PDV', example: 'Barras mostrando propias vs competencia' },
-          { id: 'option2', name: 'Mapa de calor', description: 'Matriz por PDV y período', example: 'Heatmap de intensidad de personal' },
-          { id: 'option3', name: 'Gauge comparativo', description: 'Medidor de diferencia', example: 'Velocímetro mostrando ventaja/desventaja' },
+          { id: 'option1', name: 'Comparativa horizontal', description: 'Barras horizontales por PDV', example: 'Barras mostrando propias vs competencia', chartComponent: 'BaseBarChart' },
+          { id: 'option2', name: 'Mapa de calor', description: 'Matriz por PDV y período', example: 'Heatmap de intensidad de personal', chartComponent: 'HeatmapGridChart' },
+          { id: 'option3', name: 'Gauge comparativo', description: 'Medidor de diferencia', example: 'Velocímetro mostrando ventaja/desventaja', chartComponent: 'GaugeChart' },
         ]
       },
     ]
@@ -169,9 +186,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI con tendencia', description: 'Número principal con sparkline', example: 'Porcentaje grande con mini gráfico debajo' },
-          { id: 'option2', name: 'Línea temporal', description: 'Evolución del porcentaje', example: 'Gráfico de líneas con zona de alerta' },
-          { id: 'option3', name: 'Gauge de estado', description: 'Medidor de salud', example: 'Velocímetro con zonas verde/amarillo/rojo' },
+          { id: 'option1', name: 'KPI con tendencia', description: 'Número principal con sparkline', example: 'Porcentaje grande con mini gráfico debajo', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Línea temporal', description: 'Evolución del porcentaje', example: 'Gráfico de líneas con zona de alerta', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Gauge de estado', description: 'Medidor de salud', example: 'Velocímetro con zonas verde/amarillo/rojo', chartComponent: 'GaugeChart' },
         ]
       },
       { 
@@ -190,9 +207,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Comparativa de períodos', description: 'Barras lado a lado', example: 'Actual vs anterior con variación %' },
-          { id: 'option2', name: 'Indicador de cambio', description: 'Número con flecha', example: 'Porcentaje con icono arriba/abajo y color' },
-          { id: 'option3', name: 'Cascada', description: 'Waterfall chart', example: 'Flujo de cambio desde período anterior' },
+          { id: 'option1', name: 'Comparativa de períodos', description: 'Barras lado a lado', example: 'Actual vs anterior con variación %', chartComponent: 'BaseBarChart' },
+          { id: 'option2', name: 'Indicador de cambio', description: 'Número con flecha', example: 'Porcentaje con icono arriba/abajo y color', chartComponent: 'KpiCard' },
+          { id: 'option3', name: 'Cascada', description: 'Waterfall chart', example: 'Flujo de cambio desde período anterior', chartComponent: 'WaterfallChart' },
         ]
       },
       {
@@ -211,9 +228,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gráfico de pastel', description: 'Distribución por causal', example: 'Pie chart mostrando % por causa' },
-          { id: 'option2', name: 'Pareto', description: 'Barras + línea acumulada', example: 'Causales ordenadas de mayor a menor impacto' },
-          { id: 'option3', name: 'Tabla clasificada', description: 'Lista con porcentajes', example: 'Tabla con ranking de causales' },
+          { id: 'option1', name: 'Gráfico de pastel', description: 'Distribución por causal', example: 'Pie chart mostrando % por causa', chartComponent: 'BasePieChart' },
+          { id: 'option2', name: 'Pareto', description: 'Barras + línea acumulada', example: 'Causales ordenadas de mayor a menor impacto', chartComponent: 'BaseComposedChart' },
+          { id: 'option3', name: 'Tabla clasificada', description: 'Lista con porcentajes', example: 'Tabla con ranking de causales', chartComponent: 'BaseBarChart' },
         ]
       },
       { 
@@ -232,9 +249,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Barra de progreso', description: 'Completitud visual', example: 'Barra horizontal con porcentaje alcanzado' },
-          { id: 'option2', name: 'Comparativa vs objetivo', description: 'Actual vs meta', example: 'Barras con línea de objetivo' },
-          { id: 'option3', name: 'Semáforo por categoría', description: 'Estado por segmento', example: 'Tabla con indicadores de color' },
+          { id: 'option1', name: 'Barra de progreso', description: 'Completitud visual', example: 'Barra horizontal con porcentaje alcanzado', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Comparativa vs objetivo', description: 'Actual vs meta', example: 'Barras con línea de objetivo', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Semáforo por categoría', description: 'Estado por segmento', example: 'Tabla con indicadores de color', chartComponent: 'KpiCard' },
         ]
       },
       {
@@ -253,9 +270,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI numérico', description: 'Número destacado', example: 'Contador grande con variación' },
-          { id: 'option2', name: 'Mapa geográfico', description: 'Visualización por zona', example: 'Mapa con puntos de calor' },
-          { id: 'option3', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Gráfico mostrando cambios en el tiempo' },
+          { id: 'option1', name: 'KPI numérico', description: 'Número destacado', example: 'Contador grande con variación', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Mapa geográfico', description: 'Visualización por zona', example: 'Mapa con puntos de calor', chartComponent: 'HeatmapChart' },
+          { id: 'option3', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Gráfico mostrando cambios en el tiempo', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -274,9 +291,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge porcentual', description: 'Medidor circular', example: 'Velocímetro con % afectado' },
-          { id: 'option2', name: 'Barras comparativas', description: 'Por región o canal', example: 'Barras mostrando % por segmento' },
-          { id: 'option3', name: 'Tendencia histórica', description: 'Línea en el tiempo', example: 'Evolución del % de PDVs afectados' },
+          { id: 'option1', name: 'Gauge porcentual', description: 'Medidor circular', example: 'Velocímetro con % afectado', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Barras comparativas', description: 'Por región o canal', example: 'Barras mostrando % por segmento', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Tendencia histórica', description: 'Línea en el tiempo', example: 'Evolución del % de PDVs afectados', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -295,9 +312,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI con contexto', description: 'Número principal', example: 'Promedio con rango min-max' },
-          { id: 'option2', name: 'Distribución', description: 'Histograma', example: 'Barras mostrando frecuencia de SKUs agotados' },
-          { id: 'option3', name: 'Box plot', description: 'Gráfico de caja', example: 'Visualización de dispersión y cuartiles' },
+          { id: 'option1', name: 'KPI con contexto', description: 'Número principal', example: 'Promedio con rango min-max', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Distribución', description: 'Histograma', example: 'Barras mostrando frecuencia de SKUs agotados', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Box plot', description: 'Gráfico de caja', example: 'Visualización de dispersión y cuartiles', chartComponent: 'BoxPlotChart' },
         ]
       },
       {
@@ -316,9 +333,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Barra de cumplimiento', description: 'Progreso visual', example: 'Barra con % y objetivo' },
-          { id: 'option2', name: 'Comparativa por canal', description: 'Barras múltiples', example: 'Cumplimiento por tipo de PDV' },
-          { id: 'option3', name: 'Matriz de productos', description: 'Heatmap', example: 'SKUs vs PDVs con disponibilidad' },
+          { id: 'option1', name: 'Barra de cumplimiento', description: 'Progreso visual', example: 'Barra con % y objetivo', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Comparativa por canal', description: 'Barras múltiples', example: 'Cumplimiento por tipo de PDV', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Matriz de productos', description: 'Heatmap', example: 'SKUs vs PDVs con disponibilidad', chartComponent: 'HeatmapGridChart' },
         ]
       },
       {
@@ -337,9 +354,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Indicador de cambio', description: 'Delta con flecha', example: '% con icono y color según dirección' },
-          { id: 'option2', name: 'Comparativa temporal', description: 'Barras lado a lado', example: 'Período actual vs anterior' },
-          { id: 'option3', name: 'Línea de evolución', description: 'Tendencia histórica', example: 'Gráfico mostrando cambios mensuales' },
+          { id: 'option1', name: 'Indicador de cambio', description: 'Delta con flecha', example: '% con icono y color según dirección', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Comparativa temporal', description: 'Barras lado a lado', example: 'Período actual vs anterior', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Línea de evolución', description: 'Tendencia histórica', example: 'Gráfico mostrando cambios mensuales', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -358,9 +375,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Barras agrupadas', description: 'Por causal', example: 'Barras mostrando % de PDVs por causa' },
-          { id: 'option2', name: 'Matriz de calor', description: 'Causales vs zonas', example: 'Heatmap de impacto por región' },
-          { id: 'option3', name: 'Treemap', description: 'Bloques proporcionales', example: 'Tamaño por importancia de causal' },
+          { id: 'option1', name: 'Barras agrupadas', description: 'Por causal', example: 'Barras mostrando % de PDVs por causa', chartComponent: 'BaseBarChart' },
+          { id: 'option2', name: 'Matriz de calor', description: 'Causales vs zonas', example: 'Heatmap de impacto por región', chartComponent: 'HeatmapGridChart' },
+          { id: 'option3', name: 'Treemap', description: 'Bloques proporcionales', example: 'Tamaño por importancia de causal', chartComponent: 'BaseTreemap' },
         ]
       },
       {
@@ -379,9 +396,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI monetario', description: 'Valor en moneda', example: 'Monto de oportunidad perdida' },
-          { id: 'option2', name: 'Waterfall', description: 'Flujo de impacto', example: 'Cascada mostrando pérdida por SKU' },
-          { id: 'option3', name: 'Comparativa de productos', description: 'Ranking', example: 'Top SKUs con mayor oportunidad' },
+          { id: 'option1', name: 'KPI monetario', description: 'Valor en moneda', example: 'Monto de oportunidad perdida', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Waterfall', description: 'Flujo de impacto', example: 'Cascada mostrando pérdida por SKU', chartComponent: 'WaterfallChart' },
+          { id: 'option3', name: 'Comparativa de productos', description: 'Ranking', example: 'Top SKUs con mayor oportunidad', chartComponent: 'BaseBarChart' },
         ]
       },
     ]
@@ -407,9 +424,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Contador simple', description: 'Número destacado', example: 'Total de averías del período' },
-          { id: 'option2', name: 'Tendencia temporal', description: 'Línea evolutiva', example: 'Gráfico de averías en el tiempo' },
-          { id: 'option3', name: 'Por categoría', description: 'Barras clasificadas', example: 'Averías por tipo de producto' },
+          { id: 'option1', name: 'Contador simple', description: 'Número destacado', example: 'Total de averías del período', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Tendencia temporal', description: 'Línea evolutiva', example: 'Gráfico de averías en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Por categoría', description: 'Barras clasificadas', example: 'Averías por tipo de producto', chartComponent: 'BaseBarChart' },
         ]
       },
     ]
@@ -435,9 +452,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI con desglose', description: 'Total y breakdown', example: 'Número principal con división por motivo' },
-          { id: 'option2', name: 'Tendencia comparativa', description: 'Líneas múltiples', example: 'Averías vs vencimientos en el tiempo' },
-          { id: 'option3', name: 'Pareto de productos', description: 'Barras + acumulado', example: 'SKUs con más devoluciones' },
+          { id: 'option1', name: 'KPI con desglose', description: 'Total y breakdown', example: 'Número principal con división por motivo', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Tendencia comparativa', description: 'Líneas múltiples', example: 'Averías vs vencimientos en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Pareto de productos', description: 'Barras + acumulado', example: 'SKUs con más devoluciones', chartComponent: 'BaseComposedChart' },
         ]
       },
     ]
@@ -463,9 +480,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor circular', example: 'Velocímetro con % implementado' },
-          { id: 'option2', name: 'Barras por iniciativa', description: 'Desglose de estrategias', example: 'Barras con % de cada iniciativa' },
-          { id: 'option3', name: 'Mapa de calor', description: 'Por zona y estrategia', example: 'Matriz de implementación regional' },
+          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor circular', example: 'Velocímetro con % implementado', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Barras por iniciativa', description: 'Desglose de estrategias', example: 'Barras con % de cada iniciativa', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Mapa de calor', description: 'Por zona y estrategia', example: 'Matriz de implementación regional', chartComponent: 'HeatmapGridChart' },
         ]
       },
     ]
@@ -491,9 +508,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gráfico de pastel', description: 'Share visual', example: 'Pie chart con participación por marca' },
-          { id: 'option2', name: 'Barras apiladas', description: 'Composición del lineal', example: 'Barras mostrando distribución por marca' },
-          { id: 'option3', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Cambios en participación mes a mes' },
+          { id: 'option1', name: 'Gráfico de pastel', description: 'Share visual', example: 'Pie chart con participación por marca', chartComponent: 'BasePieChart' },
+          { id: 'option2', name: 'Barras apiladas', description: 'Composición del lineal', example: 'Barras mostrando distribución por marca', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Cambios en participación mes a mes', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -513,9 +530,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge comparativo', description: 'Medidor vs target', example: 'Velocímetro centrado en 100%' },
-          { id: 'option2', name: 'Barras duales', description: 'Actual vs Nielsen', example: 'Comparación lado a lado por categoría' },
-          { id: 'option3', name: 'Scatter plot', description: 'Matriz de posicionamiento', example: 'Puntos mostrando posición vs mercado' },
+          { id: 'option1', name: 'Gauge comparativo', description: 'Medidor vs target', example: 'Velocímetro centrado en 100%', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Barras duales', description: 'Actual vs Nielsen', example: 'Comparación lado a lado por categoría', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Scatter plot', description: 'Matriz de posicionamiento', example: 'Puntos mostrando posición vs mercado', chartComponent: 'BaseScatterChart' },
         ]
       },
     ]
@@ -541,9 +558,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Barra de progreso', description: 'Avance vs meta', example: 'Barra con % de cumplimiento' },
-          { id: 'option2', name: 'Ranking de vendedores', description: 'Barras ordenadas', example: 'Top performers vs cuota' },
-          { id: 'option3', name: 'Evolución mensual', description: 'Línea de tendencia', example: 'Cumplimiento mes a mes' },
+          { id: 'option1', name: 'Barra de progreso', description: 'Avance vs meta', example: 'Barra con % de cumplimiento', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Ranking de vendedores', description: 'Barras ordenadas', example: 'Top performers vs cuota', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Evolución mensual', description: 'Línea de tendencia', example: 'Cumplimiento mes a mes', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -563,9 +580,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI monetario', description: 'Valor destacado', example: 'Monto total con tendencia' },
-          { id: 'option2', name: 'Barras por período', description: 'Evolución temporal', example: 'Valor de pedidos por mes' },
-          { id: 'option3', name: 'Embudo de conversión', description: 'Funnel de ventas', example: 'Desde visitas hasta pedidos cerrados' },
+          { id: 'option1', name: 'KPI monetario', description: 'Valor destacado', example: 'Monto total con tendencia', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Barras por período', description: 'Evolución temporal', example: 'Valor de pedidos por mes', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Embudo de conversión', description: 'Funnel de ventas', example: 'Desde visitas hasta pedidos cerrados', chartComponent: 'BaseFunnelChart' },
         ]
       },
     ]
@@ -591,9 +608,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge de ejecución', description: 'Medidor de cumplimiento', example: 'Velocímetro con % ejecutado' },
-          { id: 'option2', name: 'Comparativa temporal', description: 'Barras por período', example: 'Cumplimiento semana a semana' },
-          { id: 'option3', name: 'Heatmap regional', description: 'Matriz por zona', example: 'Mapa de calor de ejecución por región' },
+          { id: 'option1', name: 'Gauge de ejecución', description: 'Medidor de cumplimiento', example: 'Velocímetro con % ejecutado', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Comparativa temporal', description: 'Barras por período', example: 'Cumplimiento semana a semana', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Heatmap regional', description: 'Matriz por zona', example: 'Mapa de calor de ejecución por región', chartComponent: 'HeatmapGridChart' },
         ]
       },
     ]
@@ -619,9 +636,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Barra de cobertura', description: 'Progreso visual', example: 'Barra mostrando % de PDVs con POP' },
-          { id: 'option2', name: 'Mapa geográfico', description: 'Distribución espacial', example: 'Mapa con cobertura por zona' },
-          { id: 'option3', name: 'Matriz de materiales', description: 'POP vs PDV', example: 'Heatmap de tipos de POP por local' },
+          { id: 'option1', name: 'Barra de cobertura', description: 'Progreso visual', example: 'Barra mostrando % de PDVs con POP', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Mapa geográfico', description: 'Distribución espacial', example: 'Mapa con cobertura por zona', chartComponent: 'HeatmapChart' },
+          { id: 'option3', name: 'Matriz de materiales', description: 'POP vs PDV', example: 'Heatmap de tipos de POP por local', chartComponent: 'HeatmapGridChart' },
         ]
       },
       {
@@ -641,9 +658,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Contador KPI', description: 'Número destacado', example: 'Total de piezas implementadas' },
-          { id: 'option2', name: 'Barras por tipo', description: 'Clasificación de POP', example: 'Cantidad por tipo de material' },
-          { id: 'option3', name: 'Tendencia acumulada', description: 'Crecimiento en el tiempo', example: 'Línea mostrando incremento de POP' },
+          { id: 'option1', name: 'Contador KPI', description: 'Número destacado', example: 'Total de piezas implementadas', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Barras por tipo', description: 'Clasificación de POP', example: 'Cantidad por tipo de material', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Tendencia acumulada', description: 'Crecimiento en el tiempo', example: 'Línea mostrando incremento de POP', chartComponent: 'BaseAreaChart' },
         ]
       },
     ]
@@ -668,9 +685,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Gráfico de líneas con bandas de precio' },
-          { id: 'option2', name: 'Comparativa de canales', description: 'Barras por segmento', example: 'Barras agrupadas por tipo de canal' },
-          { id: 'option3', name: 'KPI con histórico', description: 'Número destacado', example: 'Precio actual con variación y mini gráfico' },
+          { id: 'option1', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Gráfico de líneas con bandas de precio', chartComponent: 'BaseLineChart' },
+          { id: 'option2', name: 'Comparativa de canales', description: 'Barras por segmento', example: 'Barras agrupadas por tipo de canal', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'KPI con histórico', description: 'Número destacado', example: 'Precio actual con variación y mini gráfico', chartComponent: 'KpiCard' },
         ]
       },
       {
@@ -689,9 +706,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI destacado', description: 'Número principal', example: 'Precio moda con frecuencia' },
-          { id: 'option2', name: 'Histograma', description: 'Distribución de precios', example: 'Barras mostrando frecuencia por rango' },
-          { id: 'option3', name: 'Comparativa', description: 'Moda vs promedio', example: 'Barras comparando diferentes estadísticas' },
+          { id: 'option1', name: 'KPI destacado', description: 'Número principal', example: 'Precio moda con frecuencia', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Histograma', description: 'Distribución de precios', example: 'Barras mostrando frecuencia por rango', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Comparativa', description: 'Moda vs promedio', example: 'Barras comparando diferentes estadísticas', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -710,9 +727,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI con contexto', description: 'Valor destacado', example: 'Precio máximo con ubicación' },
-          { id: 'option2', name: 'Box plot', description: 'Gráfico de caja', example: 'Visualización de dispersión de precios' },
-          { id: 'option3', name: 'Ranking de PDVs', description: 'Top precios altos', example: 'Lista de PDVs con precios máximos' },
+          { id: 'option1', name: 'KPI con contexto', description: 'Valor destacado', example: 'Precio máximo con ubicación', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Box plot', description: 'Gráfico de caja', example: 'Visualización de dispersión de precios', chartComponent: 'BoxPlotChart' },
+          { id: 'option3', name: 'Ranking de PDVs', description: 'Top precios altos', example: 'Lista de PDVs con precios máximos', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -731,9 +748,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI con alerta', description: 'Valor destacado', example: 'Precio mínimo con indicador de riesgo' },
-          { id: 'option2', name: 'Comparativa histórica', description: 'Línea de evolución', example: 'Cambios del precio mínimo en el tiempo' },
-          { id: 'option3', name: 'Mapa de canales', description: 'Distribución por tipo', example: 'Precios mínimos por canal' },
+          { id: 'option1', name: 'KPI con alerta', description: 'Valor destacado', example: 'Precio mínimo con indicador de riesgo', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Comparativa histórica', description: 'Línea de evolución', example: 'Cambios del precio mínimo en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Mapa de canales', description: 'Distribución por tipo', example: 'Precios mínimos por canal', chartComponent: 'BaseBarChart' },
         ]
       },
       { 
@@ -752,9 +769,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Índice comparativo', description: 'Gauge centrado en 100', example: 'Medidor mostrando si está arriba/abajo de 100%' },
-          { id: 'option2', name: 'Scatter plot', description: 'Dispersión vs competencia', example: 'Puntos por PDV mostrando relación de precios' },
-          { id: 'option3', name: 'Barras de desviación', description: 'Diferencia por SKU', example: 'Barras horizontales con línea en 100%' },
+          { id: 'option1', name: 'Índice comparativo', description: 'Gauge centrado en 100', example: 'Medidor mostrando si está arriba/abajo de 100%', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Scatter plot', description: 'Dispersión vs competencia', example: 'Puntos por PDV mostrando relación de precios', chartComponent: 'BaseScatterChart' },
+          { id: 'option3', name: 'Barras de desviación', description: 'Diferencia por SKU', example: 'Barras horizontales con línea en 100%', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -773,9 +790,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor vs target', example: 'Velocímetro centrado en estrategia' },
-          { id: 'option2', name: 'Heatmap de clientes', description: 'Matriz de cumplimiento', example: 'Mapa de calor por cliente y producto' },
-          { id: 'option3', name: 'Barras de desviación', description: 'Gap vs estrategia', example: 'Desviación positiva/negativa por SKU' },
+          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor vs target', example: 'Velocímetro centrado en estrategia', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Heatmap de clientes', description: 'Matriz de cumplimiento', example: 'Mapa de calor por cliente y producto', chartComponent: 'HeatmapGridChart' },
+          { id: 'option3', name: 'Barras de desviación', description: 'Gap vs estrategia', example: 'Desviación positiva/negativa por SKU', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -794,9 +811,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Indicador de cambio', description: 'Delta con flecha', example: '% con color según dirección' },
-          { id: 'option2', name: 'Línea de evolución', description: 'Tendencia histórica', example: 'Gráfico de cambios mensuales' },
-          { id: 'option3', name: 'Cascada', description: 'Waterfall chart', example: 'Flujo de cambios de precio' },
+          { id: 'option1', name: 'Indicador de cambio', description: 'Delta con flecha', example: '% con color según dirección', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Línea de evolución', description: 'Tendencia histórica', example: 'Gráfico de cambios mensuales', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Cascada', description: 'Waterfall chart', example: 'Flujo de cambios de precio', chartComponent: 'WaterfallChart' },
         ]
       },
       {
@@ -815,9 +832,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI comparativo', description: 'Mediana vs promedio', example: 'Dos números lado a lado' },
-          { id: 'option2', name: 'Box plot', description: 'Gráfico de caja', example: 'Visualización de cuartiles y mediana' },
-          { id: 'option3', name: 'Distribución', description: 'Histograma con mediana', example: 'Frecuencias con línea de mediana' },
+          { id: 'option1', name: 'KPI comparativo', description: 'Mediana vs promedio', example: 'Dos números lado a lado', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Box plot', description: 'Gráfico de caja', example: 'Visualización de cuartiles y mediana', chartComponent: 'BoxPlotChart' },
+          { id: 'option3', name: 'Distribución', description: 'Histograma con mediana', example: 'Frecuencias con línea de mediana', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -836,9 +853,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI con min-max', description: 'Rango destacado', example: 'Diferencia con valores extremos' },
-          { id: 'option2', name: 'Barras de rango', description: 'Visualización de spread', example: 'Barras mostrando min, promedio, max' },
-          { id: 'option3', name: 'Evolución temporal', description: 'Línea de rango', example: 'Cómo varía el rango en el tiempo' },
+          { id: 'option1', name: 'KPI con min-max', description: 'Rango destacado', example: 'Diferencia con valores extremos', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Barras de rango', description: 'Visualización de spread', example: 'Barras mostrando min, promedio, max', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Evolución temporal', description: 'Línea de rango', example: 'Cómo varía el rango en el tiempo', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -857,9 +874,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI estadístico', description: 'Número con interpretación', example: 'Desviación con semáforo de control' },
-          { id: 'option2', name: 'Banda de confianza', description: 'Área en gráfico', example: 'Precio promedio con bandas ±1 std' },
-          { id: 'option3', name: 'Control chart', description: 'Gráfico de control', example: 'Puntos con límites de control' },
+          { id: 'option1', name: 'KPI estadístico', description: 'Número con interpretación', example: 'Desviación con semáforo de control', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Banda de confianza', description: 'Área en gráfico', example: 'Precio promedio con bandas ±1 std', chartComponent: 'BaseAreaChart' },
+          { id: 'option3', name: 'Control chart', description: 'Gráfico de control', example: 'Puntos con límites de control', chartComponent: 'BaseScatterChart' },
         ]
       },
       {
@@ -878,9 +895,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI porcentual', description: 'CV como %', example: 'Porcentaje con interpretación' },
-          { id: 'option2', name: 'Ranking de productos', description: 'Barras ordenadas', example: 'SKUs con mayor variabilidad' },
-          { id: 'option3', name: 'Scatter plot', description: 'Precio vs CV', example: 'Relación entre precio y variabilidad' },
+          { id: 'option1', name: 'KPI porcentual', description: 'CV como %', example: 'Porcentaje con interpretación', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Ranking de productos', description: 'Barras ordenadas', example: 'SKUs con mayor variabilidad', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Scatter plot', description: 'Precio vs CV', example: 'Relación entre precio y variabilidad', chartComponent: 'BaseScatterChart' },
         ]
       },
       {
@@ -899,9 +916,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI comparativo', description: 'Ponderado vs simple', example: 'Dos precios lado a lado' },
-          { id: 'option2', name: 'Evolución dual', description: 'Líneas comparativas', example: 'Precio simple vs ponderado en el tiempo' },
-          { id: 'option3', name: 'Scatter', description: 'Precio vs volumen', example: 'Puntos mostrando relación precio-unidades' },
+          { id: 'option1', name: 'KPI comparativo', description: 'Ponderado vs simple', example: 'Dos precios lado a lado', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Evolución dual', description: 'Líneas comparativas', example: 'Precio simple vs ponderado en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Scatter', description: 'Precio vs volumen', example: 'Puntos mostrando relación precio-unidades', chartComponent: 'BaseScatterChart' },
         ]
       },
       {
@@ -920,9 +937,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI de revenue', description: 'Precio ponderado', example: 'Número con impacto en ventas' },
-          { id: 'option2', name: 'Cascada de valor', description: 'Waterfall', example: 'Contribución al revenue por rango de precio' },
-          { id: 'option3', name: 'Matriz precio-valor', description: 'Heatmap', example: 'Precio vs valor de venta' },
+          { id: 'option1', name: 'KPI de revenue', description: 'Precio ponderado', example: 'Número con impacto en ventas', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Cascada de valor', description: 'Waterfall', example: 'Contribución al revenue por rango de precio', chartComponent: 'WaterfallChart' },
+          { id: 'option3', name: 'Matriz precio-valor', description: 'Heatmap', example: 'Precio vs valor de venta', chartComponent: 'HeatmapGridChart' },
         ]
       },
       {
@@ -942,9 +959,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI monetario', description: 'Valor del gap', example: 'Monto de descuento promedio' },
-          { id: 'option2', name: 'Barras por canal', description: 'Gap por segmento', example: 'Descuento promedio por tipo de PDV' },
-          { id: 'option3', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Cambios en el gap mes a mes' },
+          { id: 'option1', name: 'KPI monetario', description: 'Valor del gap', example: 'Monto de descuento promedio', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Barras por canal', description: 'Gap por segmento', example: 'Descuento promedio por tipo de PDV', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Cambios en el gap mes a mes', chartComponent: 'BaseLineChart' },
         ]
       },
       {
@@ -964,9 +981,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'KPI porcentual', description: 'Gap como %', example: 'Porcentaje de descuento promedio' },
-          { id: 'option2', name: 'Heatmap de productos', description: 'Matriz SKU vs canal', example: 'Mapa de calor de descuentos' },
-          { id: 'option3', name: 'Distribución', description: 'Histograma', example: 'Frecuencia de rangos de descuento' },
+          { id: 'option1', name: 'KPI porcentual', description: 'Gap como %', example: 'Porcentaje de descuento promedio', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Heatmap de productos', description: 'Matriz SKU vs canal', example: 'Mapa de calor de descuentos', chartComponent: 'HeatmapGridChart' },
+          { id: 'option3', name: 'Distribución', description: 'Histograma', example: 'Frecuencia de rangos de descuento', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -986,9 +1003,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor inverso', example: 'Velocímetro mostrando % fuera de rango' },
-          { id: 'option2', name: 'Mapa geográfico', description: 'Distribución espacial', example: 'Mapa con PDVs fuera de política' },
-          { id: 'option3', name: 'Lista de PDVs', description: 'Tabla clasificada', example: 'Ranking de PDVs con mayor desviación' },
+          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor inverso', example: 'Velocímetro mostrando % fuera de rango', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Mapa geográfico', description: 'Distribución espacial', example: 'Mapa con PDVs fuera de política', chartComponent: 'HeatmapChart' },
+          { id: 'option3', name: 'Lista de PDVs', description: 'Tabla clasificada', example: 'Ranking de PDVs con mayor desviación', chartComponent: 'BaseBarChart' },
         ]
       },
       {
@@ -1008,9 +1025,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor positivo', example: 'Velocímetro mostrando % en rango' },
-          { id: 'option2', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Mejora de cumplimiento en el tiempo' },
-          { id: 'option3', name: 'Barras comparativas', description: 'Por región o canal', example: 'Cumplimiento por segmento' },
+          { id: 'option1', name: 'Gauge de cumplimiento', description: 'Medidor positivo', example: 'Velocímetro mostrando % en rango', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Evolución temporal', description: 'Línea de tendencia', example: 'Mejora de cumplimiento en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Barras comparativas', description: 'Por región o canal', example: 'Cumplimiento por segmento', chartComponent: 'BaseBarChart' },
         ]
       },
     ]
@@ -1035,9 +1052,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Contador con meta', description: 'Número grande con objetivo', example: 'KPI card mostrando visitas vs cuota' },
-          { id: 'option2', name: 'Calendario de calor', description: 'Heatmap por día', example: 'Calendario con intensidad de visitas' },
-          { id: 'option3', name: 'Barras por vendedor', description: 'Ranking de equipo', example: 'Barras horizontales por persona' },
+          { id: 'option1', name: 'Contador con meta', description: 'Número grande con objetivo', example: 'KPI card mostrando visitas vs cuota', chartComponent: 'KpiCard' },
+          { id: 'option2', name: 'Calendario de calor', description: 'Heatmap por día', example: 'Calendario con intensidad de visitas', chartComponent: 'HeatmapGridChart' },
+          { id: 'option3', name: 'Barras por vendedor', description: 'Ranking de equipo', example: 'Barras horizontales por persona', chartComponent: 'BaseBarChart' },
         ]
       },
       { 
@@ -1056,9 +1073,9 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Progreso circular', description: 'Donut con porcentaje', example: 'Gráfico circular mostrando completitud' },
-          { id: 'option2', name: 'Barras por período', description: 'Comparativa semanal/mensual', example: 'Barras de cumplimiento por semana' },
-          { id: 'option3', name: 'Tabla con semáforo', description: 'Lista de vendedores', example: 'Tabla con estado verde/amarillo/rojo' },
+          { id: 'option1', name: 'Progreso circular', description: 'Donut con porcentaje', example: 'Gráfico circular mostrando completitud', chartComponent: 'GaugeChart' },
+          { id: 'option2', name: 'Barras por período', description: 'Comparativa semanal/mensual', example: 'Barras de cumplimiento por semana', chartComponent: 'BaseBarChart' },
+          { id: 'option3', name: 'Tabla con semáforo', description: 'Lista de vendedores', example: 'Tabla con estado verde/amarillo/rojo', chartComponent: 'BaseBarChart' },
         ]
       },
       { 
@@ -1077,16 +1094,20 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Embudo de conversión', description: 'Funnel chart', example: 'Embudo de visitas a ventas efectivas' },
-          { id: 'option2', name: 'Evolución mensual', description: 'Línea de tendencia', example: 'Gráfico mostrando mejora en el tiempo' },
-          { id: 'option3', name: 'Comparativa de equipo', description: 'Ranking por vendedor', example: 'Barras ordenadas de mayor a menor efectividad' },
+          { id: 'option1', name: 'Embudo de conversión', description: 'Funnel chart', example: 'Embudo de visitas a ventas efectivas', chartComponent: 'BaseFunnelChart' },
+          { id: 'option2', name: 'Evolución mensual', description: 'Línea de tendencia', example: 'Gráfico mostrando mejora en el tiempo', chartComponent: 'BaseLineChart' },
+          { id: 'option3', name: 'Comparativa de equipo', description: 'Ranking por vendedor', example: 'Barras ordenadas de mayor a menor efectividad', chartComponent: 'BaseBarChart' },
         ]
       },
     ]
   },
 };
 
-export function GraphSelectionForm() {
+interface GraphSelectionFormProps {
+  onSubmit?: (formData: FormData) => void;
+}
+
+export function GraphSelectionForm({ onSubmit }: GraphSelectionFormProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     industry: null,
@@ -1118,7 +1139,13 @@ export function GraphSelectionForm() {
       if (response.ok) {
         const result = await response.json();
         console.log('Server response:', result);
-        alert('¡Dashboard creado exitosamente! Los datos se enviaron correctamente.');
+        
+        // Navigate to dashboard
+        if (onSubmit) {
+          onSubmit(formData);
+        } else {
+          alert('¡Dashboard creado exitosamente! Los datos se enviaron correctamente.');
+        }
       } else {
         console.error('Error response:', response.status, response.statusText);
         alert(`Error al enviar los datos: ${response.status} ${response.statusText}`);
