@@ -6,6 +6,7 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
+  LabelList,
 } from 'recharts';
 import {
   ChartContainer,
@@ -100,10 +101,10 @@ export const BaseFunnelChart: React.FC<BaseFunnelChartProps> = ({
     };
   });
 
-  return (
+   return (
     <ChartContainer config={chartConfig} className={`w-full h-full ${className}`}>
-      <div style={{ width: '100%', height: '100%' }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <ResponsiveContainer width="100%" height="80%">
           <FunnelChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             {showTooltip && (
               <Tooltip
@@ -117,7 +118,6 @@ export const BaseFunnelChart: React.FC<BaseFunnelChartProps> = ({
               />
             )}
 
-            {showLegend && <Legend content={ChartLegendContent as any} />}
 
             <Funnel
               data={data}
@@ -134,6 +134,43 @@ export const BaseFunnelChart: React.FC<BaseFunnelChartProps> = ({
             </Funnel>
           </FunnelChart>
         </ResponsiveContainer>
+
+        {/* Legend labels below chart */}
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          justifyContent: 'center', 
+          gap: '16px',
+          padding: '16px',
+          marginTop: '8px'
+        }}>
+          {data.map((item, index) => (
+            <div
+              key={`legend-${index}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <div
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: colors[index % colors.length],
+                  borderRadius: '4px',
+                }}
+              />
+              <span style={{ 
+                fontSize: '14px', 
+                color: 'var(--color-text-primary)',
+                fontWeight: '500'
+              }}>
+                {item[nameKey]}: {item[dataKey].toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </ChartContainer>
   );
