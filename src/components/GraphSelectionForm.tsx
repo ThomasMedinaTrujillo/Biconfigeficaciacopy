@@ -1075,7 +1075,7 @@ const variablesData: Record<string, VariableInfo> = {
           ]
         },
         visualizationOptions: [
-          { id: 'option1', name: 'Progreso circular', description: 'Donut con porcentaje', example: 'Gráfico circular mostrando completitud', chartComponent: 'GaugeChart' },
+          { id: 'option1', name: 'Progreso circular', description: 'Donut con porcentaje', example: 'Gráfico circular mostrando completitud', chartComponent: 'BasePieChart' },
           { id: 'option2', name: 'Barras por período', description: 'Comparativa semanal/mensual', example: 'Barras de cumplimiento por semana', chartComponent: 'BaseBarChart' },
           { id: 'option3', name: 'Tabla con semáforo', description: 'Lista de vendedores', example: 'Tabla con estado verde/amarillo/rojo', chartComponent: 'BaseBarChart' },
         ]

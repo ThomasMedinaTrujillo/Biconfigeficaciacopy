@@ -8,7 +8,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Customized,
-  Rectangle,
 } from 'recharts';
 import {
   ChartContainer,
@@ -70,14 +69,28 @@ const BoxPlotShapes: React.FC<{
     return null;
   }
 
-  const bandWidth = typeof xScale.bandwidth === 'function' ? xScale.bandwidth() : 40;
-  const boxWidth = Math.min(42, bandWidth * 0.55);
-  const whiskerCapWidth = boxWidth * 0.7;
+  // For band scale this is > 0, for point scale this is usually 0.
+  const rawBandWidth =
+    typeof xScale.bandwidth === 'function' ? Number(xScale.bandwidth()) : 0;
+
+  // Fallback slot width when using point scale.
+  const plotWidth = Number(chartProps?.offset?.width ?? 0);
+  const estimatedSlotWidth = plotWidth > 0 ? plotWidth / Math.max(data.length, 1) : 40;
+
+  const slotWidth = rawBandWidth > 0 ? rawBandWidth : estimatedSlotWidth;
+
+  // Dynamic: 55% of slot, with sensible min/max limits.
+  const boxWidth = Math.max(10, Math.min(42, slotWidth * 0.55));
+  const whiskerCapWidth = Math.max(8, boxWidth * 0.7);
 
   return (
     <g>
       {data.map((point) => {
-        const xCenter = xScale(point.name) + bandWidth / 2;
+        const xValue = Number(xScale(point.name));
+        if (!Number.isFinite(xValue)) return null;
+
+        // If band scale, convert left-edge -> center. If point scale, xValue is already center.
+        const xCenter = xValue + (rawBandWidth > 0 ? rawBandWidth / 2 : 0);
 
         const yMin = yScale(point.min);
         const yQ1 = yScale(point.q1);
@@ -86,7 +99,12 @@ const BoxPlotShapes: React.FC<{
         const yMax = yScale(point.max);
 
         const boxTop = Math.min(yQ1, yQ3);
-        const boxHeight = Math.max(Math.abs(yQ1 - yQ3), 1);
+        const rawBoxHeight = Math.abs(yQ1 - yQ3);
+
+        // Keep IQR box visible even when q1 ~= q3
+        const minVisualBoxHeight = 10;
+        const boxHeight = Math.max(rawBoxHeight, minVisualBoxHeight);
+        const boxY = boxTop - (boxHeight - rawBoxHeight) / 2;
 
         return (
           <g key={point.name}>
@@ -113,16 +131,17 @@ const BoxPlotShapes: React.FC<{
             />
 
             {/* IQR box */}
-            <Rectangle
+            <rect
               x={xCenter - boxWidth / 2}
-              y={boxTop}
+              y={boxY}
               width={boxWidth}
               height={boxHeight}
               fill={colors.box}
               fillOpacity={0.35}
               stroke={colors.whisker}
               strokeWidth={2}
-              radius={4}
+              rx={4}
+              ry={4}
             />
 
             {/* Median line inside box */}
@@ -205,7 +224,7 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
-            margin={{ top: 20, right: 20, left: 10, bottom: 20 }}
+            margin={{ top: 20, right: 20, left: 16, bottom: 20 }}
           >
             {showGrid && (
               <CartesianGrid
@@ -217,6 +236,7 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
 
             <XAxis
               dataKey="name"
+              padding={{ left: 24, right: 24 }}
               stroke="var(--color-text-secondary)"
               tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
             />

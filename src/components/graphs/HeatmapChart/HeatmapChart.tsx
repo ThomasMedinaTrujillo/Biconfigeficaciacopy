@@ -1,14 +1,4 @@
-import React from 'react';
-import {
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Scatter,
-  ScatterChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import React, { useMemo } from 'react';
 import '../dashboard-theme.css';
 
 type DataRecord = Record<string, unknown>;
@@ -34,13 +24,42 @@ export interface HeatmapChartProps<T extends DataRecord> {
 }
 
 const DEFAULT_HEIGHT = 250;
-const DEFAULT_COLORS = [
-  'var(--color-soft-blue)',
-  'var(--color-blue-light)',
-  'var(--color-blue-bright)',
-  'var(--color-blue-primary)',
-  'var(--color-blue-dark)',
+
+// Gradient from lightest to darkest blue
+const GRADIENT_COLORS = [
+  '#E8F4F8', // Very light blue
+  '#B8E0ED', // Light blue
+  '#7CC5DD', // Medium light blue
+  '#4BA8C8', // Medium blue
+  '#2B8AAF', // Medium dark blue
+  '#1A6B8F', // Dark blue
+  '#0D4C6F', // Very dark blue
 ];
+
+const interpolateColor = (color1: string, color2: string, factor: number): string => {
+  const hex2rgb = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return [r, g, b];
+  };
+
+  const rgb2hex = (r: number, g: number, b: number) => {
+    return '#' + [r, g, b].map(x => {
+      const hex = Math.round(x).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+  };
+
+  const [r1, g1, b1] = hex2rgb(color1);
+  const [r2, g2, b2] = hex2rgb(color2);
+
+  const r = r1 + factor * (r2 - r1);
+  const g = g1 + factor * (g2 - g1);
+  const b = b1 + factor * (b2 - b1);
+
+  return rgb2hex(r, g, b);
+};
 
 const defaultColorScale = (
   value: number,
@@ -49,7 +68,7 @@ const defaultColorScale = (
   colors: string[]
 ): string => {
   if (colors.length === 0) {
-    return 'var(--color-blue-primary)';
+    return colors[colors.length - 1] || GRADIENT_COLORS[GRADIENT_COLORS.length - 1];
   }
 
   if (max <= min) {
@@ -57,12 +76,13 @@ const defaultColorScale = (
   }
 
   const normalized = (value - min) / (max - min);
-  const index = Math.min(
-    colors.length - 1,
-    Math.max(0, Math.floor(normalized * colors.length))
-  );
+  
+  // Find the two colors to interpolate between
+  const segmentSize = 1 / (colors.length - 1);
+  const segmentIndex = Math.min(colors.length - 2, Math.floor(normalized / segmentSize));
+  const segmentFactor = (normalized - segmentIndex * segmentSize) / segmentSize;
 
-  return colors[index];
+  return interpolateColor(colors[segmentIndex], colors[segmentIndex + 1], segmentFactor);
 };
 
 const HeatmapChart = <T extends DataRecord>({
@@ -79,20 +99,43 @@ const HeatmapChart = <T extends DataRecord>({
   width = '100%',
   title,
   subtitle,
-  colors = DEFAULT_COLORS,
+  colors = GRADIENT_COLORS,
   loading = false,
   emptyState,
 }: HeatmapChartProps<T>) => {
-  const values = data
-    .map((item) => Number(item[valueKey]))
-    .filter((value) => Number.isFinite(value));
+  const [hoveredCell, setHoveredCell] = React.useState<{ x: string; y: string; value: number } | null>(null);
 
-  const minValue = values.length > 0 ? Math.min(...values) : 0;
-  const maxValue = values.length > 0 ? Math.max(...values) : 0;
+  const { xLabels, yLabels, gridData, minValue, maxValue } = useMemo(() => {
+    const xSet = new Set<string>();
+    const ySet = new Set<string>();
+    const grid = new Map<string, number>();
+
+    data.forEach((item) => {
+      const x = String(item[xKey]);
+      const y = String(item[yKey]);
+      const value = Number(item[valueKey]);
+
+      xSet.add(x);
+      ySet.add(y);
+      grid.set(`${x}_${y}`, value);
+    });
+
+    const values = Array.from(grid.values()).filter((value) => Number.isFinite(value));
+    const min = values.length > 0 ? Math.min(...values) : 0;
+    const max = values.length > 0 ? Math.max(...values) : 0;
+
+    return {
+      xLabels: Array.from(xSet),
+      yLabels: Array.from(ySet),
+      gridData: grid,
+      minValue: min,
+      maxValue: max,
+    };
+  }, [data, xKey, yKey, valueKey]);
 
   const getColor = (value: number): string => {
     if (!Number.isFinite(value)) {
-      return 'var(--color-soft-blue)';
+      return colors[0];
     }
 
     if (colorScale) {
@@ -101,33 +144,6 @@ const HeatmapChart = <T extends DataRecord>({
 
     return defaultColorScale(value, minValue, maxValue, colors);
   };
-
-  const renderCell = (props: { cx?: number; cy?: number; fill?: string }) => {
-    const { cx = 0, cy = 0, fill = 'var(--color-blue-primary)' } = props;
-    const halfSize = cellSize / 2;
-
-    return (
-      <rect
-        x={cx - halfSize}
-        y={cy - halfSize}
-        width={cellSize}
-        height={cellSize}
-        rx="var(--radius-bar)"
-        ry="var(--radius-bar)"
-        fill={fill}
-        stroke="var(--color-card)"
-        strokeWidth={1}
-      />
-    );
-  };
-
-  const legendSteps = [0, 0.25, 0.5, 0.75, 1].map((step) => {
-    const value = minValue + (maxValue - minValue) * step;
-    return {
-      value,
-      color: getColor(value),
-    };
-  });
 
   if (loading) {
     return (
@@ -161,6 +177,20 @@ const HeatmapChart = <T extends DataRecord>({
     );
   }
 
+  const yLabelWidth = 60;
+  const xLabelHeight = 30;
+  const padding = 12;
+  const chartWidth = typeof width === 'string' ? 600 : width;
+  const availableWidth = chartWidth - yLabelWidth - padding * 2;
+  const availableHeight = height - xLabelHeight - padding * 2 - (showLegend ? 40 : 0);
+  
+  const cellWidth = availableWidth / xLabels.length;
+  const cellHeight = availableHeight / yLabels.length;
+  const actualCellSize = Math.min(cellWidth, cellHeight);
+
+  // Create gradient ID
+  const gradientId = `heatmap-gradient-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className={`w-full rounded-[var(--radius-card)] border border-[color:var(--color-border)] bg-[color:var(--color-card)] p-4 ${className ?? ''}`}>
       {(title || subtitle) && (
@@ -170,54 +200,143 @@ const HeatmapChart = <T extends DataRecord>({
         </div>
       )}
 
-      <ResponsiveContainer width={width} height={height}>
-        <ScatterChart margin={{ top: 12, right: 12, bottom: 12, left: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
-          <XAxis
-            dataKey={xKey}
-            type="category"
-            stroke="var(--color-text-secondary)"
-            tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
-          />
-          <YAxis
-            dataKey={yKey}
-            type="category"
-            stroke="var(--color-text-secondary)"
-            tick={{ fill: 'var(--color-text-secondary)', fontSize: 12 }}
-          />
+      <div className="relative" style={{ width: '100%', height }}>
+        <svg width="100%" height={height} style={{ overflow: 'visible' }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+              {colors.map((color, index) => (
+                <stop
+                  key={`gradient-${index}`}
+                  offset={`${(index / (colors.length - 1)) * 100}%`}
+                  stopColor={color}
+                />
+              ))}
+            </linearGradient>
+          </defs>
 
-          {showTooltip && (
-            <Tooltip
-              formatter={(_, __, payload) => {
-                const item = payload?.payload as T | undefined;
-                const rawValue = item ? item[valueKey] : undefined;
-                return [String(rawValue ?? '-'), String(valueKey)];
-              }}
-            />
+          {/* Y-axis labels */}
+          {yLabels.map((label, i) => (
+            <text
+              key={`y-${label}`}
+              x={yLabelWidth - 8}
+              y={padding + i * actualCellSize + actualCellSize / 2}
+              textAnchor="end"
+              dominantBaseline="middle"
+              fill="var(--color-text-secondary)"
+              fontSize="12"
+            >
+              {label}
+            </text>
+          ))}
+
+          {/* X-axis labels */}
+          {xLabels.map((label, i) => (
+            <text
+              key={`x-${label}`}
+              x={yLabelWidth + i * actualCellSize + actualCellSize / 2}
+              y={height - (showLegend ? 40 : 10)}
+              textAnchor="middle"
+              fill="var(--color-text-secondary)"
+              fontSize="12"
+            >
+              {label}
+            </text>
+          ))}
+
+          {/* Heatmap cells */}
+          {yLabels.map((yLabel, yIndex) =>
+            xLabels.map((xLabel, xIndex) => {
+              const value = gridData.get(`${xLabel}_${yLabel}`);
+              const color = value !== undefined ? getColor(value) : colors[0];
+
+              return (
+                <rect
+                  key={`cell-${xLabel}-${yLabel}`}
+                  x={yLabelWidth + xIndex * actualCellSize + 1}
+                  y={padding + yIndex * actualCellSize + 1}
+                  width={actualCellSize - 2}
+                  height={actualCellSize - 2}
+                  rx="4"
+                  ry="4"
+                  fill={color}
+                  stroke="var(--color-card)"
+                  strokeWidth={1}
+                  style={{ cursor: showTooltip ? 'pointer' : 'default' }}
+                  onMouseEnter={() =>
+                    showTooltip && value !== undefined &&
+                    setHoveredCell({ x: xLabel, y: yLabel, value })
+                  }
+                  onMouseLeave={() => setHoveredCell(null)}
+                />
+              );
+            })
           )}
+        </svg>
 
-          <Scatter data={data} dataKey={valueKey} shape={renderCell}>
-            {data.map((item, index) => {
-              const numericValue = Number(item[valueKey]);
-              return <Cell key={`heat-cell-${index}`} fill={getColor(numericValue)} />;
-            })}
-          </Scatter>
-        </ScatterChart>
-      </ResponsiveContainer>
+        {/* Tooltip */}
+        {showTooltip && hoveredCell && (
+          <div
+            className="pointer-events-none absolute rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-card)] px-2 py-1 shadow-lg"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 10,
+            }}
+          >
+            <div className="text-xs">
+              <div className="text-[color:var(--color-text-secondary)]">
+                {String(xKey)}: {hoveredCell.x}
+              </div>
+              <div className="text-[color:var(--color-text-secondary)]">
+                {String(yKey)}: {hoveredCell.y}
+              </div>
+              <div className="font-semibold text-[color:var(--color-text-primary)]">
+                {String(valueKey)}: {hoveredCell.value}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {showLegend && (
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="text-xs text-[color:var(--color-text-secondary)]">{minValue.toFixed(0)}</span>
-          <div className="flex flex-1 items-center gap-1">
-            {legendSteps.map((step, index) => (
-              <div
-                key={`legend-step-${index}`}
-                className="h-2 flex-1 rounded-[var(--radius-bar)]"
-                style={{ backgroundColor: step.color }}
-              />
-            ))}
+        <div className="mt-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-[color:var(--color-text-secondary)]">
+              {minValue.toFixed(0)}
+            </span>
+            <div className="relative flex-1">
+              <svg width="100%" height="16" style={{ display: 'block' }}>
+                <defs>
+                  <linearGradient id={`${gradientId}-legend`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    {colors.map((color, index) => (
+                      <stop
+                        key={`legend-gradient-${index}`}
+                        offset={`${(index / (colors.length - 1)) * 100}%`}
+                        stopColor={color}
+                      />
+                    ))}
+                  </linearGradient>
+                </defs>
+                <rect
+                  x="0"
+                  y="0"
+                  width="100%"
+                  height="16"
+                  rx="4"
+                  fill={`url(#${gradientId}-legend)`}
+                />
+              </svg>
+            </div>
+            <span className="text-xs font-medium text-[color:var(--color-text-secondary)]">
+              {maxValue.toFixed(0)}
+            </span>
           </div>
-          <span className="text-xs text-[color:var(--color-text-secondary)]">{maxValue.toFixed(0)}</span>
+          <div className="mt-1 text-center">
+            <span className="text-xs text-[color:var(--color-text-secondary)]">
+              {String(valueKey)}
+            </span>
+          </div>
         </div>
       )}
     </div>

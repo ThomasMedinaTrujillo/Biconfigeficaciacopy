@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BarChart3, Database, Store, TrendingUp } from 'lucide-react';
 import type { DataEntry } from './DataEntryForm';
 import { KpiCard } from './graphs/KpiCard';
 import { GaugeChart } from './graphs/GaugeChart';
@@ -28,6 +28,21 @@ const generateCategoryData = () =>
 
 const generatePieData = () =>
   products.slice(0, 4).map(prod => ({ name: prod, value: random(20, 80) }));
+
+const getIndicatorCandidateFields = (indicator: any) => {
+  const fields = new Set<string>();
+
+  if (typeof indicator?.variable === 'string' && indicator.variable.trim()) {
+    fields.add(indicator.variable.trim());
+  }
+
+  const formula = formatIndicatorFormula(indicator?.formula);
+  if (formula) {
+    (formula.match(/[a-z_]+/gi) || []).forEach((f) => fields.add(f));
+  }
+
+  return Array.from(fields);
+};
 
 const generateScatterData = () =>
   Array.from({ length: 20 }, (_, i) => ({
@@ -83,6 +98,83 @@ interface DashboardProps {
   formData: FormData;
   onBack: () => void;
 }
+
+const formatVariableLabel = (value: string | null | undefined) => {
+  if (!value) return 'Sin variable asignada';
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const formatIndicatorFormula = (formula: string | null | undefined) => {
+  if (!formula || !formula.trim()) {
+    return null;
+  }
+  return formula.replace(/\s+/g, ' ').trim();
+};
+
+const toNumeric = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const getIndicatorNumericValues = (indicator: any, dataEntries: DataEntry[]) => {
+  if (!dataEntries.length) {
+    return [] as number[];
+  }
+
+  const candidateFields = new Set<string>();
+  if (typeof indicator?.variable === 'string' && indicator.variable.trim()) {
+    candidateFields.add(indicator.variable.trim());
+  }
+
+  const formula = formatIndicatorFormula(indicator?.formula);
+  if (formula) {
+    const formulaMatches = formula.match(/[a-z_]+/gi) || [];
+    formulaMatches.forEach(field => candidateFields.add(field));
+  }
+
+  const values: number[] = [];
+  dataEntries.forEach((entry) => {
+    const numericValuesForEntry: number[] = [];
+    candidateFields.forEach((field) => {
+      const num = toNumeric(entry[field]);
+      if (num !== null) {
+        numericValuesForEntry.push(num);
+      }
+    });
+    if (numericValuesForEntry.length) {
+      values.push(numericValuesForEntry[0]);
+    }
+  });
+
+  return values;
+};
+
+const buildIndicatorInsights = (indicator: any, dataEntries: DataEntry[], totalUniquePdvs: number) => {
+  if (!dataEntries.length) {
+    return [] as Array<{ label: string; value: string }>;
+  }
+
+  const numericValues = getIndicatorNumericValues(indicator, dataEntries);
+  if (!numericValues.length) {
+    return [] as Array<{ label: string; value: string }>;
+  }
+
+  const avg = numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+  const max = Math.max(...numericValues);
+  const withDataCount = numericValues.filter(value => value > 0).length;
+  const coverage = totalUniquePdvs > 0
+    ? Math.min(100, Math.round((withDataCount / totalUniquePdvs) * 100))
+    : 0;
+
+  return [
+    { label: 'Promedio', value: avg.toFixed(1) },
+    { label: 'Maximo', value: max.toFixed(1) },
+    { label: 'Cobertura PDV', value: `${coverage}%` },
+  ];
+};
 
 const getChartComponent = (indicator: any, index: number, dataEntries?: DataEntry[]) => {
   const componentName = indicator.visualizationOptions?.find(
@@ -166,43 +258,55 @@ const getChartComponent = (indicator: any, index: number, dataEntries?: DataEntr
       );
 
     case 'BaseLineChart': {
-      let data = generateTimeSeriesData();
-      
-      if (chartData && chartData.data && chartData.data.length > 0) {
-        // Create time series from entries using dates
-        const dataByDate: Record<string, number> = {};
-        chartData.data.forEach((entry: any) => {
-          const date = entry.date || 'Unknown';
-          if (!dataByDate[date]) {
-            dataByDate[date] = 0;
-          }
-          dataByDate[date] += entry.exhibiciones_propias || entry.presencia_actual || 0;
-        });
-        
-        // Convert to chart format
-        data = Object.entries(dataByDate)
-          .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-          .slice(-12) // Last 12 entries for timeline
-          .map(([period, value]) => ({
-            period: period.substring(5), // Show month-day
-            value: Math.round(value / (chartData.data?.length || 1))
-          }));
-        
-        if (data.length === 0) {
-          data = generateTimeSeriesData();
-        }
+  let data = generateTimeSeriesData();
+  
+  if (chartData && chartData.data && chartData.data.length > 0) {
+    const candidateFields = getIndicatorCandidateFields(indicator);
+    const dataByDate: Record<string, number[]> = {};
+    
+    chartData.data.forEach((entry: any) => {
+      const date = entry.date || 'Unknown';
+      if (!dataByDate[date]) {
+        dataByDate[date] = [];
       }
       
-      return (
-        <BaseLineChart
-          key={key}
-          data={data}
-          xKey="period"
-          yKeys={['value']}
-          showDots
-        />
-      );
+      // Try to extract a numeric value from candidate fields
+      for (const field of candidateFields) {
+        const val = toNumeric(entry[field]);
+        if (val !== null) {
+          dataByDate[date].push(val);
+          break; // use first matching field
+        }
+      }
+    });
+    
+    // Convert to chart format - average per date
+    const converted = Object.entries(dataByDate)
+      .filter(([_, values]) => values.length > 0)
+      .map(([period, values]) => ({
+        period: period.length > 5 ? period.substring(5) : period,
+        value: Math.round(values.reduce((sum, v) => sum + v, 0) / values.length)
+      }))
+      .sort((a, b) => a.period.localeCompare(b.period))
+      .slice(-12);
+    
+    if (converted.length > 0) {
+      data = converted;
     }
+  }
+  
+  console.log('[BaseLineChart data]', indicator.name, data);
+  
+  return (
+    <BaseLineChart
+      key={key}
+      data={data}
+      xKey="period"
+      yKeys={['value']}
+      showDots
+    />
+  );
+}
 
     case 'BaseAreaChart': {
       let data = generateTimeSeriesData();
@@ -225,30 +329,46 @@ const getChartComponent = (indicator: any, index: number, dataEntries?: DataEntr
     }
 
     case 'BaseBarChart': {
-      let data = generateCategoryData();
-      
-      if (chartData && chartData.data && chartData.data.length > 0) {
-        // Create data from entries grouped by PDV
-        data = chartData.data.map((entry: any) => ({
-          name: entry.pdv || `PDV ${Math.random().toString(36).substr(2, 9)}`,
-          value: Math.round(
-            entry.exhibiciones_propias || 
-            entry.productos_agotados || 
-            entry.presencia_actual || 
-            Math.random() * 50
-          )
-        }));
-      }
-      
-      return (
-        <BaseBarChart
-          key={key}
-          data={data}
-          xKey="name"
-          yKeys={['value']}
-        />
-      );
+  let data = generateCategoryData();
+  
+  if (chartData && chartData.data && chartData.data.length > 0) {
+    const candidateFields = getIndicatorCandidateFields(indicator);
+    
+    data = chartData.data
+      .map((entry: any, i: number) => {
+        let value: number | null = null;
+        
+        for (const field of candidateFields) {
+          const val = toNumeric(entry[field]);
+          if (val !== null) {
+            value = val;
+            break;
+          }
+        }
+        
+        return {
+          name: entry.pdv || `PDV ${i + 1}`,
+          value: value !== null ? Math.round(value) : 0
+        };
+      })
+      .filter(item => item.value > 0); // only show bars with data
+    
+    if (data.length === 0) {
+      data = generateCategoryData();
     }
+  }
+  
+  console.log('[BaseBarChart data]', indicator.name, data);
+  
+  return (
+    <BaseBarChart
+      key={key}
+      data={data}
+      xKey="name"
+      yKeys={['value']}
+    />
+  );
+}
 
     case 'BasePieChart': {
       let data = generatePieData();
@@ -394,6 +514,23 @@ export function Dashboard({ formData, onBack }: DashboardProps) {
     (config: any) => config.visualizationType !== null
   );
 
+  const dataEntries = formData.dataEntries || [];
+  const totalRecords = dataEntries.length;
+  const uniquePdvs = new Set(
+    dataEntries
+      .map((entry: any) => (entry.pdv ? String(entry.pdv).trim() : ''))
+      .filter(Boolean)
+  ).size;
+
+  const indicatorsByVariable = indicators.reduce((acc: Record<string, any[]>, indicator: any) => {
+    const variable = formatVariableLabel(indicator.variable);
+    if (!acc[variable]) {
+      acc[variable] = [];
+    }
+    acc[variable].push(indicator);
+    return acc;
+  }, {});
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
@@ -415,37 +552,97 @@ export function Dashboard({ formData, onBack }: DashboardProps) {
           <h1 className="text-[32px] text-[#253a66] mb-2">
             Dashboard de Indicadores
           </h1>
-          <p className="text-[#979797]">
-            Visualizando {indicators.length} indicador{indicators.length !== 1 ? 'es' : ''}
-          </p>
+
+          <div className="flex flex-wrap items-center gap-3 text-[14px]">
+            {formData.industry && (
+              <span className="inline-flex items-center rounded-full border border-[#41c0f0] bg-[#e9f8ff] px-3 py-1 text-[#005fa0] font-medium capitalize">
+                {formData.industry.replace(/_/g, ' ')}
+              </span>
+            )}
+            <span className="text-[#979797]">{Object.keys(indicatorsByVariable).length} variables</span>
+            <span className="text-[#979797]">{indicators.length} indicadores</span>
+            <span className="text-[#979797]">{totalRecords} registros</span>
+          </div>
         </div>
 
-        {/* Industry Badge */}
-        {formData.industry && (
-          <div className="bg-white rounded-lg shadow-lg p-4 mb-6">
-            <span className="text-[#979797]">Industria: </span>
-            <span className="text-[#005fa0] font-semibold capitalize">
-              {formData.industry.replace(/_/g, ' ')}
-            </span>
-          </div>
-        )}
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {indicators.map((indicator: any, idx: number) => (
-            <div key={idx} className="bg-white rounded-lg shadow-lg p-6 overflow-hidden">
-              <div className="mb-4">
-                <p className="text-[12px] uppercase tracking-wide text-[#979797]">
-                  {indicator.variable}
-                </p>
-                <h3 className="text-[18px] text-[#253a66] font-semibold">
-                  {indicator.name}
-                </h3>
-              </div>
-              <div style={{ width: '100%', height: '320px' }}>
-                {getChartComponent(indicator, idx, formData.dataEntries)}
-              </div>
+        {/* Compact summary bar */}
+        <div className="mb-8 rounded-lg border border-[#bfe9ff] bg-[#f3fbff] px-4 py-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-[#8fd9ff] bg-white px-3 py-2">
+              <Database className="h-4 w-4 text-[#005fa0]" />
+              <span className="text-[12px] text-[#5a6d8d]">Registros</span>
+              <span className="text-[16px] font-semibold text-[#005fa0] ml-2">{totalRecords}</span>
             </div>
+
+            <div className="inline-flex items-center gap-2 rounded-lg border border-[#8fd9ff] bg-white px-3 py-2">
+              <Store className="h-4 w-4 text-[#005fa0]" />
+              <span className="text-[12px] text-[#5a6d8d]">PDV</span>
+              <span className="text-[16px] font-semibold text-[#005fa0] ml-2">{uniquePdvs}</span>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-lg border border-[#8fd9ff] bg-white px-3 py-2">
+              <BarChart3 className="h-4 w-4 text-[#005fa0]" />
+              <span className="text-[12px] text-[#5a6d8d]">Variables</span>
+              <span className="text-[16px] font-semibold text-[#005fa0] ml-2">{Object.keys(indicatorsByVariable).length}</span>
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-lg border border-[#8fd9ff] bg-white px-3 py-2">
+              <TrendingUp className="h-4 w-4 text-[#005fa0]" />
+              <span className="text-[12px] text-[#5a6d8d]">Indicadores</span>
+              <span className="text-[16px] font-semibold text-[#005fa0] ml-2">{indicators.length}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts grouped by variable */}
+        <div className="space-y-10 ">
+          {Object.entries(indicatorsByVariable).map(([variable, variableIndicators]) => (
+            <section key={variable} className="rounded-lg border border-[#d7e2f2] bg-white shadow-sm overflow-hidden p-4 flex-col mb-4">
+              <div className="bg-blue px-6 py-5 mb-4">
+                <h2 className="text-[30px] leading-tight text-black font-semibold capitalize">{variable}</h2>
+                <p className="text-blue-100 text-[14px] mt-1">
+                  {variableIndicators.length} indicador{variableIndicators.length !== 1 ? 'es' : ''}
+                </p>
+              </div>
+
+              <div className="p-5 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 ">
+                {variableIndicators.map((indicator: any, idx: number) => {
+                  const formulaLabel = formatIndicatorFormula(indicator.formula);
+                  const insights = buildIndicatorInsights(indicator, dataEntries, uniquePdvs);
+                    console.log(indicator.name, indicator, formData.dataEntries)
+
+
+                  return (
+                    <div key={`${variable}-${idx}`} className="rounded-lg border border-[#d6dce8] bg-[#fdfefe] overflow-hidden p-4">
+                      <div className="px-5 pt-4 pb-4 border-b border-[#e9edf5] bg-[#fbfcff]">
+                        
+                        <h3 className="text-[20px] text-[#253a66] font-semibold leading-tight">
+                          {indicator.name}
+                        </h3>
+                    
+                      </div>
+
+                      <div className="px-3 py-2" style={{ width: '100%', minHeight: 320, height: '320px' }}>
+                        {getChartComponent(indicator, idx, formData.dataEntries)}
+                      </div>
+
+                      {/*insights.length > 0 && (
+                        <div className="px-4 pb-4">
+                          <div className="grid grid-cols-3 gap-2 rounded-lg border border-[#9fddff] bg-[#f1faff] p-2 flex">
+                            {insights.map((insight) => (
+                              <div key={`${indicator.name}-${insight.label}`} style={{width: 'max-content'}}>
+                                <p className="text-[11px] text-[#73849d] uppercase">{insight.label}</p>
+                                <p className="text-[14px] text-[#1f4f77] font-semibold">{insight.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) */}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           ))}
         </div>
 

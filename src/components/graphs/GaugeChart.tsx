@@ -4,6 +4,7 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
+  Customized,
 } from 'recharts';
 import {
   ChartContainer,
@@ -60,6 +61,15 @@ export interface GaugeChartProps {
  *   showLabel={true}
  * />
  */
+const toPx = (value: number | string, total: number): number => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.endsWith('%')) {
+    const pct = Number(value.replace('%', ''));
+    return (pct / 100) * total;
+  }
+  return Number(value) || 0;
+};
+
 export const GaugeChart: React.FC<GaugeChartProps> = ({
   value,
   min,
@@ -115,22 +125,17 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
   }, [activeThresholds]);
 
   // Calculate needle angle
-  const angleRange = Math.abs(endAngle - startAngle);
-  const needleAngle = startAngle - (angleRange * percentage) / 100;
+  const percentageClamped = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const needleAngle = startAngle + (endAngle - startAngle) * percentageClamped;
 
-  // Create chart configuration
   const chartConfig: ChartConfig = {};
 
-  const cx = '50%';
-  const cy = '100%';
-  const innerRadius = 50;
+  const cx: number | string = '50%';
+  const cy: number | string = '100%';
   const outerRadius = 80;
+  const innerRadius = Math.max(0, outerRadius - arcWidth);
 
-  // Calculate needle coordinates
-  const needleRadians = (needleAngle * Math.PI) / 180;
-  const needleLength = 30;
-  const needleX = Math.cos(needleRadians) * needleLength;
-  const needleY = Math.sin(needleRadians) * needleLength;
+  const needleLength = outerRadius - 8;
 
   return (
     <ChartContainer config={chartConfig} className={`w-full h-full ${className}`}>
@@ -145,7 +150,6 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
               endAngle={endAngle}
               innerRadius={innerRadius}
               outerRadius={outerRadius}
-              fill="#8884d8"
               dataKey="value"
               stroke="none"
             >
@@ -154,25 +158,24 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
               ))}
             </Pie>
 
-            {/* Custom needle using SVG circle and line */}
-            <g>
-              {/* Needle line */}
-              <line
-                x1="0"
-                y1="0"
-                x2={needleX}
-                y2={needleY}
-                stroke={needleColor}
-                strokeWidth={1}
-              />
-              {/* Needle center circle */}
-              <circle
-                cx="0"
-                cy="0"
-                r={3}
-                fill={needleColor}
-              />
-            </g>
+            <Customized
+              component={() => {
+                return (
+                  <g>
+                    <line
+                      x1={toPx(cx, 400)}
+                      y1={toPx(cy, 300)}
+                      x2={toPx(cx, 400) + Math.cos((needleAngle * Math.PI) / 180) * needleLength}
+                      y2={toPx(cy, 300) - Math.sin((needleAngle * Math.PI) / 180) * needleLength}
+                      stroke={needleColor}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                    />
+                    <circle cx={toPx(cx, 400)} cy={toPx(cy, 300)} r={4} fill={needleColor} />
+                  </g>
+                );
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
 
