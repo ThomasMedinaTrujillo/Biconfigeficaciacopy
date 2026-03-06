@@ -1097,10 +1097,13 @@ export function GraphSelectionForm() {
 
   const handleNext = () => {
     if (step < 4) setStep(step + 1);
+    scroll({top: 200, behavior: 'instant'})
   };
 
   const handlePrevious = () => {
     if (step > 1) setStep(step - 1);
+      scroll({top: 200, behavior: 'instant'})
+
   };
 
   const handleSubmit = async () => {
