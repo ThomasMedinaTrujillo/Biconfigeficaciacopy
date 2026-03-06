@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   PieChart,
   Pie,
@@ -159,19 +159,25 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
             </Pie>
 
             <Customized
-              component={() => {
+              component={({ width, height }: any) => {
+                // Calculate center based on actual container dimensions
+                const centerX = (width || 400) / 2;
+                const centerY = (height || 300) - 40;
+
+                console.log('GaugeChart dimensions:', { width, height, centerX, centerY, needleAngle });
+
                 return (
                   <g>
                     <line
-                      x1={toPx(cx, 400)}
-                      y1={toPx(cy, 300)}
-                      x2={toPx(cx, 400) + Math.cos((needleAngle * Math.PI) / 180) * needleLength}
-                      y2={toPx(cy, 300) - Math.sin((needleAngle * Math.PI) / 180) * needleLength}
+                      x1={centerX}
+                      y1={centerY}
+                      x2={centerX + Math.cos((needleAngle * Math.PI) / 180) * needleLength}
+                      y2={centerY - Math.sin((needleAngle * Math.PI) / 180) * needleLength}
                       stroke={needleColor}
                       strokeWidth={2}
                       strokeLinecap="round"
                     />
-                    <circle cx={toPx(cx, 400)} cy={toPx(cy, 300)} r={4} fill={needleColor} />
+                    <circle cx={centerX} cy={centerY} r={4} fill={needleColor} />
                   </g>
                 );
               }}
