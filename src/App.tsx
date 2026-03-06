@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { GraphSelectionForm } from './components/GraphSelectionForm';
 import { Dashboard, FormData } from './components/Dashboard';
+import { DataEntryForm, DataEntry } from './components/DataEntryForm';
 import svgPaths from "./imports/svg-ofxr8hlvdr";
 
 function Logo() {
@@ -33,8 +34,14 @@ function Navigation() {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<'form' | 'dashboard'>('form');
+  const [currentView, setCurrentView] = useState<'dataEntry' | 'form' | 'dashboard'>('dataEntry');
   const [dashboardData, setDashboardData] = useState<FormData | null>(null);
+  const [enteredData, setEnteredData] = useState<DataEntry[] | null>(null);
+
+  const handleDataEntrySubmit = (data: DataEntry[]) => {
+    setEnteredData(data);
+    setCurrentView('form');
+  };
 
   const handleFormSubmit = (formData: FormData) => {
     setDashboardData(formData);
@@ -45,8 +52,21 @@ export default function App() {
     setCurrentView('form');
   };
 
+  const handleBackToDataEntry = () => {
+    setCurrentView('dataEntry');
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
+      {currentView === 'dataEntry' && (
+        <>
+          <Navigation />
+          <main className="max-w-[1400px] mx-auto px-6 py-12">
+            <DataEntryForm onDataSubmit={handleDataEntrySubmit} />
+          </main>
+        </>
+      )}
+
       {currentView === 'form' && (
         <>
           <Navigation />
@@ -59,7 +79,7 @@ export default function App() {
                 Selecciona variables, indicadores y personaliza las visualizaciones
               </p>
             </div>
-            <GraphSelectionForm onSubmit={handleFormSubmit} />
+            <GraphSelectionForm onSubmit={handleFormSubmit} onBack={handleBackToDataEntry} dataEntries={enteredData || undefined} />
           </main>
         </>
       )}

@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import type { DataEntry } from './DataEntryForm';
 import { KpiCard } from './graphs/KpiCard';
 import { GaugeChart } from './graphs/GaugeChart';
 import { BaseLineChart } from './graphs/BaseLineChart';
@@ -75,6 +76,7 @@ export interface FormData {
   industry: string | null;
   selectedVariables: string[];
   indicatorConfigs: Record<string, any>;
+  dataEntries?: DataEntry[];
 }
 
 interface DashboardProps {
@@ -82,25 +84,75 @@ interface DashboardProps {
   onBack: () => void;
 }
 
-const getChartComponent = (indicator: any, index: number) => {
+const getChartComponent = (indicator: any, index: number, dataEntries?: DataEntry[]) => {
   const componentName = indicator.visualizationOptions?.find(
     (opt: any) => opt.id === indicator.visualizationType
   )?.chartComponent || 'KpiCard';
 
   const key = `chart-${index}`;
 
+  // Transform data entries based on formula/variable
+  const transformDataForChart = () => {
+    if (!dataEntries || dataEntries.length === 0) {
+      return null;
+    }
+
+    const data = dataEntries;
+    
+    // Extract numeric fields for the indicator
+    const numericFields: Record<string, number[]> = {};
+    const fieldNames = [
+      'exhibiciones_propias', 'exhibiciones_competencia', 'impulsadoras_propias',
+      'impulsadoras_competencia', 'productos_agotados', 'total_productos',
+      'presencia_actual', 'presencia_anterior', 'ventas_totales', 'precio',
+      'precio_competencia', 'metros_lineal_propios', 'transferencias_realizadas',
+      'ventas_potenciales_perdidas'
+    ];
+
+    fieldNames.forEach(field => {
+      numericFields[field] = data
+        .map(entry => typeof entry[field] === 'number' ? entry[field] : 0)
+        .filter(val => !isNaN(val));
+    });
+
+    return {
+      data,
+      numericFields,
+      // For aggregation
+      sum: (field: string) => numericFields[field]?.reduce((a, b) => a + b, 0) || 0,
+      avg: (field: string) => {
+        const vals = numericFields[field] || [];
+        return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+      },
+      max: (field: string) => numericFields[field]?.length ? Math.max(...numericFields[field]) : 0,
+      min: (field: string) => numericFields[field]?.length ? Math.min(...numericFields[field]) : 0,
+    };
+  };
+
+  const chartData = transformDataForChart();
+
   switch (componentName) {
-    case 'KpiCard':
+    case 'KpiCard': {
+      let value = random(50, 200);
+      let previousValue = random(40, 180);
+      
+      if (chartData) {
+        // Use real data if available
+        value = Math.round(chartData.avg('exhibiciones_propias') || chartData.avg('productos_agotados') || chartData.avg('presencia_actual') || random(50, 200));
+        previousValue = Math.round(value * (0.85 + Math.random() * 0.2));
+      }
+      
       return (
         <KpiCard
           key={key}
-          value={random(50, 200)}
-          previousValue={random(40, 180)}
+          value={value}
+          previousValue={previousValue}
           label={indicator.name}
           format="number"
           showTrend
         />
       );
+    }
 
     case 'GaugeChart':
       return (
@@ -113,47 +165,122 @@ const getChartComponent = (indicator: any, index: number) => {
         />
       );
 
-    case 'BaseLineChart':
+    case 'BaseLineChart': {
+      let data = generateTimeSeriesData();
+      
+      if (chartData && chartData.data && chartData.data.length > 0) {
+        // Create time series from entries using dates
+        const dataByDate: Record<string, number> = {};
+        chartData.data.forEach((entry: any) => {
+          const date = entry.date || 'Unknown';
+          if (!dataByDate[date]) {
+            dataByDate[date] = 0;
+          }
+          dataByDate[date] += entry.exhibiciones_propias || entry.presencia_actual || 0;
+        });
+        
+        // Convert to chart format
+        data = Object.entries(dataByDate)
+          .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+          .slice(-12) // Last 12 entries for timeline
+          .map(([period, value]) => ({
+            period: period.substring(5), // Show month-day
+            value: Math.round(value / (chartData.data?.length || 1))
+          }));
+        
+        if (data.length === 0) {
+          data = generateTimeSeriesData();
+        }
+      }
+      
       return (
         <BaseLineChart
           key={key}
-          data={generateTimeSeriesData()}
+          data={data}
           xKey="period"
           yKeys={['value']}
           showDots
         />
       );
+    }
 
-    case 'BaseAreaChart':
+    case 'BaseAreaChart': {
+      let data = generateTimeSeriesData();
+      
+      if (chartData && chartData.data && chartData.data.length > 0) {
+        data = chartData.data.map((entry: any, idx: number) => ({
+          period: `P${idx + 1}`,
+          value: Math.round(entry.presencia_actual || entry.exhibiciones_propias || Math.random() * 100)
+        }));
+      }
+      
       return (
         <BaseAreaChart
           key={key}
-          data={generateTimeSeriesData()}
+          data={data}
           xKey="period"
           yKeys={['value']}
         />
       );
+    }
 
-    case 'BaseBarChart':
+    case 'BaseBarChart': {
+      let data = generateCategoryData();
+      
+      if (chartData && chartData.data && chartData.data.length > 0) {
+        // Create data from entries grouped by PDV
+        data = chartData.data.map((entry: any) => ({
+          name: entry.pdv || `PDV ${Math.random().toString(36).substr(2, 9)}`,
+          value: Math.round(
+            entry.exhibiciones_propias || 
+            entry.productos_agotados || 
+            entry.presencia_actual || 
+            Math.random() * 50
+          )
+        }));
+      }
+      
       return (
         <BaseBarChart
           key={key}
-          data={generateCategoryData()}
+          data={data}
           xKey="name"
           yKeys={['value']}
         />
       );
+    }
 
-    case 'BasePieChart':
+    case 'BasePieChart': {
+      let data = generatePieData();
+      
+      if (chartData && chartData.data && chartData.data.length > 0) {
+        // Group by a category field or show distribution
+        const distribution: Record<string, number> = {};
+        chartData.data.forEach((entry: any) => {
+          const category = entry.exhibiciones_tipo || 'Sin categoría';
+          distribution[category] = (distribution[category] || 0) + 1;
+        });
+        
+        data = Object.entries(distribution).map(([name, value]) => ({
+          name,
+          value
+        }));
+        
+        if (data.length === 0) {
+          data = generatePieData();
+        }
+      }
+      
       return (
         <BasePieChart
           key={key}
-          data={generatePieData()}
+          data={data}
           dataKey="value"
           nameKey="name"
           innerRadius={50}
         />
       );
+    }
 
     case 'BaseTreemap':
       return (
@@ -316,7 +443,7 @@ export function Dashboard({ formData, onBack }: DashboardProps) {
                 </h3>
               </div>
               <div style={{ width: '100%', height: '320px' }}>
-                {getChartComponent(indicator, idx)}
+                {getChartComponent(indicator, idx, formData.dataEntries)}
               </div>
             </div>
           ))}

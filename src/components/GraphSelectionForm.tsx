@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle2, Edit2, Check, Info, Calendar, Clock, Zap, Building2, Store, ShoppingCart, Package } from 'lucide-react';
+import type { DataEntry } from './DataEntryForm';
 
 type VisualizationType = 'option1' | 'option2' | 'option3';
 type Industry = 'consumo_masivo' | 'farmaceutica' | 'retail' | 'distribuidora';
@@ -49,6 +50,7 @@ interface FormData {
   industry: Industry | null;
   selectedVariables: string[];
   indicatorConfigs: Record<string, IndicatorConfig>;
+  dataEntries?: DataEntry[];
 }
 
 interface IndicatorData {
@@ -1105,9 +1107,11 @@ const variablesData: Record<string, VariableInfo> = {
 
 interface GraphSelectionFormProps {
   onSubmit?: (formData: FormData) => void;
+  onBack?: () => void;
+  dataEntries?: DataEntry[];
 }
 
-export function GraphSelectionForm({ onSubmit }: GraphSelectionFormProps) {
+export function GraphSelectionForm({ onSubmit, onBack, dataEntries }: GraphSelectionFormProps) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     industry: null,
@@ -1121,19 +1125,27 @@ export function GraphSelectionForm({ onSubmit }: GraphSelectionFormProps) {
   };
 
   const handlePrevious = () => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+    } else if (onBack) {
+      onBack();
+    }
   };
 
   const handleSubmit = async () => {
     try {
-      console.log('Sending form data:', formData);
+      const submissionData = {
+        ...formData,
+        dataEntries: dataEntries || [],
+      };
+      console.log('Sending form data:', submissionData);
       
       const response = await fetch('https://simpleservertest.vercel.app/formpost', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       if (response.ok) {
@@ -1142,7 +1154,10 @@ export function GraphSelectionForm({ onSubmit }: GraphSelectionFormProps) {
         
         // Navigate to dashboard
         if (onSubmit) {
-          onSubmit(formData);
+          onSubmit({
+            ...formData,
+            dataEntries: dataEntries || [],
+          });
         } else {
           alert('¡Dashboard creado exitosamente! Los datos se enviaron correctamente.');
         }
@@ -1729,15 +1744,16 @@ export function GraphSelectionForm({ onSubmit }: GraphSelectionFormProps) {
       <div className="border-t border-[rgba(0,0,0,0.1)] px-8 py-6 flex items-center justify-between bg-[#f5f5f5]">
         <button
           onClick={handlePrevious}
-          disabled={step === 1}
           className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
-            step === 1
-              ? 'text-[#979797] cursor-not-allowed'
-              : 'text-[#005fa0] hover:bg-white'
+            step > 1
+              ? 'text-[#005fa0] hover:bg-white'
+              : onBack
+              ? 'text-[#005fa0] hover:bg-white'
+              : 'text-[#979797] cursor-not-allowed'
           }`}
         >
           <ChevronLeft className="w-5 h-5" />
-          Anterior
+          {step === 1 ? 'Atrás a Datos' : 'Anterior'}
         </button>
 
         <div className="text-[#979797]">
